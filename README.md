@@ -52,14 +52,14 @@ docker run --rm ghcr.io/lufi42/solvis2mqtt --string-to-crypt=geheim
 # Learning (einmalig und nach jeder Änderung der control.xml, dauert einige Minuten):
 docker run --rm -v ./data:/data ghcr.io/lufi42/solvis2mqtt --server-learn
 # Betrieb:
-docker run -d --name solvis2mqtt --restart unless-stopped --stop-timeout 30 -v ./data:/data ghcr.io/lufi42/solvis2mqtt
+docker run -d --name solvis2mqtt --restart unless-stopped --stop-timeout 60 -v ./data:/data ghcr.io/lufi42/solvis2mqtt
 ```
 
 Alle Argumente hinter dem Image-Namen gehen an den Server. Der Container läuft als Benutzer mit UID 1000, das
 Verzeichnis `data` muss für diesen schreibbar sein (oder `--user` setzen). Die Heap-Größe steht in `JAVA_OPTS`
 (Default `-Xmx384m`, das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM, bricht eine laufende
-GUI-Sequenz ab, setzt dabei verstellte Werte zurück (bis zu 25 s) und meldet sich beim Broker ab; `--stop-timeout 30`
-bzw. `stop_grace_period: 30s` geben ihm die Zeit dafür (siehe [Bekannte Schwächen](#bekannte-schwächen)).
+GUI-Sequenz ab, setzt dabei verstellte Werte zurück (bis zu 50 s, eine Rückstellung dauert etwa 20 s) und meldet sich
+beim Broker ab; `--stop-timeout 60` bzw. `stop_grace_period: 60s` geben ihm die Zeit dafür (siehe [Bekannte Schwächen](#bekannte-schwächen)).
 Ein Beispiel für Docker Compose liegt in [docker/compose.yaml](docker/compose.yaml).
 
 Ohne Docker: [packaging/linux/INSTALL.md](packaging/linux/INSTALL.md) (Jar, systemd-Unit).
@@ -266,7 +266,7 @@ Mit `restart: unless-stopped` (Docker) startet der Container bei jedem Code neu,
 * **Stoppen während eines GUI-Zugriffs.** Einige Kanäle werden über Umwege gelesen, bei denen der Server einen anderen
   Wert vorübergehend verstellt und danach zurücksetzt (z. B. Tages-/Nachttemperatur eines Heizkreises über dessen
   Betriebsart). Bei SIGTERM und `TERMINATE` bricht der Server den laufenden Befehl ab, setzt aber die verstellten
-  Werte zuerst zurück (bis zu 25 s, daher `stop_grace_period` ≥ 30 s). Die Originalwerte merkt er sich außerdem in
+  Werte zuerst zurück (bis zu 50 s, daher `stop_grace_period` ≥ 60 s; eine Rückstellung dauert etwa 20 s). Die Originalwerte merkt er sich außerdem in
   `SolvisServerData/pending-restore-<unitId>.properties`; wird der Prozess hart beendet (`kill -9`, Stromausfall),
   schreibt er sie beim nächsten Start als Erstes zurück und meldet das im Log. Ein `GUI_COMMANDS_DISABLE` vor einem
   geplanten Stopp ist damit nicht mehr nötig, schadet aber nicht.
