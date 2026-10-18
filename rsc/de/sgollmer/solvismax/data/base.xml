@@ -3,11 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.example.org/control base.xsd ">
 	<tns:ExecutionData timeZone="Europe/Berlin"
-		port="10735" writablePathLinux="/opt/solvis"
+		writablePathLinux="/opt/solvis"
 		writeablePathWindows="C:\JavaPgms\solvis2mqtt\log"
 		echoInhibitTime_ms="2000" />
-	<!-- Es werden immer 2 Ports belegt, der angegebene und der nächst höhere. 
-		Also hier 107545 und 10736 -->
 	<tns:Units>
 
 		<!-- type: -->
@@ -74,22 +72,14 @@
 				<tns:Feature id="PowerOffIsServiceAccess" value="false" />
 				<!-- Wird ein Power-Off der Anlage erkannt, wird der wie ein Zugriff 
 					auf die Service-Screens behandelt (siehe vorheriges Element) -->
-				<tns:Feature id="SendMailOnError" value="false" />
-				<!-- Im Fall eines Anlagenfehlers wird eine Mail gesendet. Definitionen 
-					im Abschnitt "ExceptionMail" -->
-				<tns:Feature id="SendMailOnErrorsCleared" value="true" />
-				<!-- Im Fall von Anlagenfehler wird eine Mail versendet, wenn die Fehler 
-					behoben sind. Definitionen im Abschnitt "ExceptionMail" -->
-				<tns:Feature id="ClearErrorMessageAfterMail"
-					value="false" />
-				<!-- Ist dieses Feature deaktiviert (false), wird bei einem Anlagenfehler 
-					die GUI-Steuerung solange deaktiviert, bis die Fehlermeldung verschwunden 
-					ist. Die Steuereungsbefehle werden gemerkt und nach beenden des Fehlerzustandes 
-					ausgefuehrt. Ist es aktiviert (true), wird im Fehlerfall zum HomeScreen gewechselt 
-					und dort der Button mit dem Warnzeichen beobachtet. Ist dabei die ExceptionMail 
-					aktiviert, wird nur zum HomeScreen gewechselt, wenn der Versand der Mail 
-					erfolgreich war. Der Error-Status wird zurueckgesetzt, wenn dieser Button 
-					nicht mehr sichtbar ist. GUI-Steuerungsbefehle werden in dieser Zeit ausgefuehrt -->
+				<tns:Feature id="ClearErrorMessage" value="false" />
+				<!-- Ist dieses Feature deaktiviert (false), wird bei einem Anlagenfehler
+					die GUI-Steuerung solange deaktiviert, bis die Fehlermeldung verschwunden
+					ist. Die Steuerungsbefehle werden gemerkt und nach Beenden des Fehlerzustandes
+					ausgefuehrt. Ist es aktiviert (true), wird im Fehlerfall zum HomeScreen gewechselt
+					und dort der Button mit dem Warnzeichen beobachtet. Der Error-Status wird
+					zurueckgesetzt, wenn dieser Button nicht mehr sichtbar ist. GUI-Steuerungsbefehle
+					werden in dieser Zeit ausgefuehrt -->
 				<tns:Feature id="Admin" value="false" />
 				<!-- Ist dieses Feature aktiviert, kann der Server auch Werte innerhalb 
 					der Installateur-Menüs verändern. Aktuell ist hier nur die minimale Vorlauftemperatur 
@@ -155,31 +145,14 @@
 			</tns:ChannelOptions>
 		</tns:Unit>
 	</tns:Units>
-	<tns:Mqtt enable="false" brokerUrl="192.168.0.71" port="1883"
+	<!-- MQTT-Broker. topicPrefix und smartHomeId bilden den Anfang aller Topics:
+		<topicPrefix>/<smartHomeId>/<unitId>/<kanal>/data. Mit haDiscoveryPrefix
+		(Standard in Home Assistant: "homeassistant") veroeffentlicht der Server beim
+		Verbindungsaufbau fuer jeden Kanal eine retained Discovery-Nachricht auf
+		homeassistant/<typ>/<id>/config; Home Assistant legt die Entities damit
+		automatisch an. Ohne Home Assistant das Attribut weglassen. -->
+	<tns:Mqtt enable="true" brokerUrl="192.168.0.71" port="1883"
 		subscribeQoS="1" publishQoS="1" idPrefix="solvis2mqtt"
-		topicPrefix="solvis2mqtt" smartHomeId="IoBroker" />
-	<!-- Home Assistant MQTT Auto-Discovery aktivieren:
-		haDiscoveryPrefix="homeassistant" zum Mqtt-Element hinzufuegen.
-		Beispiel:
-		<tns:Mqtt enable="true" brokerUrl="..." port="1883"
-			subscribeQoS="1" publishQoS="1" idPrefix="solvis2mqtt"
-			topicPrefix="solvis2mqtt" smartHomeId="HomeAssistant"
-			haDiscoveryPrefix="homeassistant" />
-		Beim ersten Verbindungsaufbau werden fuer jeden Kanal retained
-		Discovery-Messages auf homeassistant/<typ>/<id>/config veroeffentlicht.
-		Home Assistant erkennt die Entities damit automatisch. -->
-	<!-- ExceptionMail securityType: TLS, SSL oder NONE -->
-	<tns:ExceptionMail port="5870"
-		passwordCrypt="AES-coded" name="Vorname Nachname" securityType="TLS"
-		provider="securesmtp.t-online.de" from="Mailadresse@t-online.de">
-		<tns:Recipients>
-			<tns:Recipient address="Mailadresse@t-online.de"
-				type="TO" />
-			<tns:Recipient address="Mailadresse@gmail.com"
-				type="TO" />
-		</tns:Recipients>
-		<!-- <tns:Proxy host="HttpProxy" port="80" user="user" passwordCrypt="EhDnGP6WICnLIIA2q9ZTew=="/> -->
-	</tns:ExceptionMail>
-	<tns:Iobroker mqttInterface="mqtt-client.0"
-		javascriptInterface="javascript.0" />
+		topicPrefix="solvis2mqtt" smartHomeId="HomeAssistant"
+		haDiscoveryPrefix="homeassistant" />
 </tns:BaseData>

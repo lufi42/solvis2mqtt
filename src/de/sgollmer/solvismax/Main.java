@@ -1,14 +1,13 @@
 /************************************************************************
- * 
+ *
  * $Id$
  *
- * 
+ *
  ************************************************************************/
 
 package de.sgollmer.solvismax;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,17 +22,13 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 import de.sgollmer.solvismax.Constants.ExitCodes;
 import de.sgollmer.solvismax.connection.CommandHandler;
-import de.sgollmer.solvismax.connection.Server;
-import de.sgollmer.solvismax.connection.TerminateClient;
 import de.sgollmer.solvismax.connection.mqtt.Mqtt;
 import de.sgollmer.solvismax.crypt.CryptAes;
 import de.sgollmer.solvismax.error.AliasException;
 import de.sgollmer.solvismax.error.AssignmentException;
 import de.sgollmer.solvismax.error.FileException;
-import de.sgollmer.solvismax.error.JsonException;
 import de.sgollmer.solvismax.error.LearningException;
 import de.sgollmer.solvismax.error.MqttConnectionLost;
-import de.sgollmer.solvismax.error.PackageException;
 import de.sgollmer.solvismax.error.SolvisErrorException;
 import de.sgollmer.solvismax.error.TerminationException;
 import de.sgollmer.solvismax.error.TypeException;
@@ -44,11 +39,27 @@ import de.sgollmer.solvismax.log.LogManager.ILogger;
 import de.sgollmer.solvismax.log.LogManager.Level;
 import de.sgollmer.solvismax.log.LogManager.LogErrors;
 import de.sgollmer.solvismax.model.Instances;
-import de.sgollmer.solvismax.smarthome.IoBroker;
-import de.sgollmer.solvismax.windows.Task;
 import de.sgollmer.solvismax.xml.BaseControlFileReader;
 import de.sgollmer.xmllibrary.XmlException;
 
+/**
+ * Entry point of solvis2mqtt.
+ *
+ * Arguments (each starting with "--"):
+ *
+ * <pre>
+ *   --base-xml=&lt;path&gt;               base.xml to use (default: next to the jar)
+ *   --string-to-crypt=&lt;text&gt;         print the encrypted form of a password and exit
+ *   --server-learn                       learn the screens of the Solvis unit, then start
+ *   --documentation [--csvSemicolon]     write the channel documentation of the configured units and exit
+ *   --channels_of_all_configurations     write the channels of all possible configurations and exit
+ * </pre>
+ *
+ * The server stops on SIGTERM (shutdown hook) or on the MQTT server command
+ * TERMINATE (exit code 0). The server command RESTART ends the process with
+ * exit code {@link ExitCodes#RESTART_REQUESTED}; the service manager
+ * (Docker restart policy, systemd Restart=) starts it again.
+ */
 public class Main {
 
 	private static final ILogger logger = LogManager.getInstance().getLogger(Main.class);
@@ -68,23 +79,19 @@ public class Main {
 	private boolean shutdownExecuted = false;
 	private Instances instances = null;
 	private CommandHandler commandHandler = null;
-	private Server server = null;
 	private Mqtt mqtt = null;
 
 	private enum ExecutionMode {
-		STANDARD(true, true, false), //
-		LEARN(false, true, false), //
-		DOCUMENTATION_OF_UNIT(false, false, true), //
-		CHANNELS_OF_ALL_CONFIGURATIONS(false, false, false), //
-		IOBROKER(false, false, true);
+		STANDARD(true, false), //
+		LEARN(false, false), //
+		DOCUMENTATION_OF_UNIT(false, true), //
+		CHANNELS_OF_ALL_CONFIGURATIONS(false, false);
 
 		private final boolean start;
-		private final boolean ipChannelLock;
 		private final boolean mustLearned;
 
-		private ExecutionMode(final boolean start, final boolean ipChannelLock, final boolean mustLearned) {
+		private ExecutionMode(final boolean start, final boolean mustLearned) {
 			this.start = start;
-			this.ipChannelLock = ipChannelLock;
 			this.mustLearned = mustLearned;
 		}
 
@@ -99,17 +106,15 @@ public class Main {
 
 	private void execute(final String[] args) {
 
-		String createTaskName = null;
 		String baseXml = null;
-		boolean onBoot = false;
 
-		Collection<String> argCollection = splitWindowsArgs(args);
+		Collection<String> argCollection = splitArgs(args);
 
 		for (Iterator<String> it = argCollection.iterator(); it.hasNext();) {
 			String arg = it.next();
 			Matcher matcher = cmdPattern.matcher(arg);
 			if (!matcher.matches()) {
-				System.err.println("Unknowwn argument: " + arg);
+				System.err.println("Unknown argument: " + arg);
 			} else {
 
 				String command = matcher.group(1);
@@ -121,7 +126,7 @@ public class Main {
 				boolean found = true;
 
 				switch (command) {
-					case "string-to-crypt": // Einen String verschlüsseln
+					case "string-to-crypt": // encrypt a password for base.xml
 						if (value == null) {
 							System.err.println("To less arguments!");
 							System.exit(Constants.ExitCodes.ARGUMENT_FAIL);
@@ -135,17 +140,7 @@ public class Main {
 							System.exit(Constants.ExitCodes.CRYPTION_FAIL);
 						}
 						break;
-					case "create-task-xml": // Eine Steuerfile für den Windows-Task-Manager erstellen
-						if (value == null) {
-							System.err.println("To less arguments!");
-							System.exit(Constants.ExitCodes.ARGUMENT_FAIL);
-						}
-						createTaskName = value;
-						break;
-					case "onBoot": // TaskManager: Start on boot
-						onBoot = true;
-						break;
-					case "base-xml": // Base-xml-Path
+					case "base-xml": // path of base.xml
 						baseXml = value;
 						break;
 					default:
@@ -154,16 +149,6 @@ public class Main {
 				if (found) {
 					it.remove();
 				}
-			}
-		}
-
-		if (createTaskName != null) {
-			try {
-				Task.createTask(createTaskName, onBoot);
-				System.exit(Constants.ExitCodes.OK);
-			} catch (XMLStreamException | IOException e) {
-				System.err.println(e.getMessage());
-				System.exit(Constants.ExitCodes.TASK_CREATING_ERROR);
 			}
 		}
 
@@ -206,33 +191,14 @@ public class Main {
 			String arg = it.next();
 			Matcher matcher = cmdPattern.matcher(arg);
 			if (!matcher.matches()) {
-				System.err.println("Unknowwn argument: " + arg);
+				System.err.println("Unknown argument: " + arg);
 			} else {
 
 				String command = matcher.group(1);
-				String value = null;
-				if (matcher.groupCount() >= 3) {
-					value = matcher.group(3);
-				}
 
 				switch (command) {
-					case "server-terminate":
-						logger.info("Termination started");
-						this.serverTerminateAndExit(baseData);
-						break;
 					case "server-learn":
 						executionMode = ExecutionMode.LEARN;
-						break;
-					case "server-restart":
-						logger.info("Restart started");
-						this.serverRestartAndExit(baseData, value);
-						break;
-					case "test-mail":
-						if (baseData.getExceptionMail() == null) {
-							throw new Error(
-									"Sending mail not possible in case of mssing or invalid data in <base.xml>");
-						}
-						System.exit(baseData.getExceptionMail().sendTestMail(baseData));
 						break;
 					case "documentation":
 						executionMode = ExecutionMode.DOCUMENTATION_OF_UNIT;
@@ -243,24 +209,12 @@ public class Main {
 					case "csvSemicolon":
 						semicolon = true;
 						break;
-					case "iobroker":
-						executionMode = ExecutionMode.IOBROKER;
-						break;
 					default:
-						System.err.println("Unknowwn argument: " + arg);
+						System.err.println("Unknown argument: " + arg);
 						System.exit(Constants.ExitCodes.ARGUMENT_FAIL);
 						break;
 				}
 			}
-		}
-
-		ServerSocket serverSocketHelper = null;
-		ServerSocket serverSocket = null;
-
-		if (executionMode.ipChannelLock) {
-
-			serverSocketHelper = this.openSocket(baseData.getPort() + 1);
-			serverSocket = this.openSocket(baseData.getPort());
 		}
 
 		Runnable runnable = new Runnable() {
@@ -297,12 +251,7 @@ public class Main {
 					this.instances.createCurrentDocumentation(semicolon);
 					System.exit(ExitCodes.OK);
 					break;
-				case IOBROKER:
-					IoBroker ioBroker = this.instances.getIobroker();
-					this.instances.init();
-					ioBroker.writeObjectList(this.instances);
-					ioBroker.writePairingScript(this.instances);
-					System.exit(ExitCodes.OK);
+				default:
 					break;
 			}
 		} catch (IOException | XMLStreamException | LearningException | AliasException | TypeException
@@ -335,8 +284,6 @@ public class Main {
 
 		if (executionMode == ExecutionMode.LEARN || this.instances.mustLearn()) {
 
-			this.closeSocket(serverSocket);
-
 			try {
 				this.instances.learn(executionMode == ExecutionMode.LEARN);
 			} catch (IOException | XMLStreamException | LearningException | FileException e) {
@@ -349,10 +296,7 @@ public class Main {
 				logger.error("Solvis unit error occured while learning");
 				System.exit(ExitCodes.SOLVIS_UNIT_ERROR);
 			}
-			serverSocket = this.openSocket(baseData.getPort());
 		}
-
-		this.closeSocket(serverSocketHelper);
 
 		try {
 			this.instances.init();
@@ -374,9 +318,11 @@ public class Main {
 		Constants.Debug.logDebugging(logger);
 
 		this.commandHandler = new CommandHandler(this.instances);
-		this.server = new Server(serverSocket, this.commandHandler,
-				this.instances.getSolvisDescription().getMiscellaneous());
 		this.mqtt = baseData.getMqtt();
+		if (this.mqtt == null || !this.mqtt.isEnable()) {
+			logger.error("Error: Mqtt is not configured or not enabled in base.xml, nothing to do.");
+			System.exit(Constants.ExitCodes.MQTT_ERROR);
+		}
 		try {
 			this.mqtt.connect(this.instances, this.commandHandler);
 		} catch (MqttException e) {
@@ -385,15 +331,16 @@ public class Main {
 		}
 
 		this.instances.initialized();
-		this.server.start();
 
 		System.out.println(serverStart);
 
-		// runnable.run();
-
 	}
 
-	private Collection<String> splitWindowsArgs(final String[] args) {
+	/**
+	 * Splits arguments which were passed as one string ("--a --b=1"), e.g. by
+	 * the Windows task scheduler, into single arguments.
+	 */
+	private Collection<String> splitArgs(final String[] args) {
 		Collection<String> argCollection = new ArrayList<>();
 		for (String argO : args) {
 			String[] comp = argO.split("--");
@@ -406,60 +353,6 @@ public class Main {
 			}
 		}
 		return argCollection;
-	}
-
-	private void serverRestartAndExit(final BaseData baseData, final String agentlibOption) {
-		try {
-			long unsuccessfullTime = System.currentTimeMillis() + Constants.MAX_WAIT_TIME_TERMINATING_OTHER_SERVER;
-			ServerSocket serverSocket = null;
-			logger.info("Wait for server termination");
-			while (System.currentTimeMillis() < unsuccessfullTime && serverSocket == null) {
-				try {
-					serverSocket = new ServerSocket(baseData.getPort());
-					serverSocket.close();
-				} catch (IOException e) {
-					serverSocket = null;
-				}
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e1) {
-				}
-
-			}
-			if (serverSocket != null) {
-				Restart restart = new Restart();
-				restart.startMainProcess(agentlibOption);
-			} else {
-				logger.error("Restart not possible, server still running");
-			}
-		} catch (Throwable e) {
-			logger.info("Unexpected error on restart: " + e.getMessage());
-		}
-		logger.info("Restart finished");
-		LogManager.exit(ExitCodes.OK);
-	}
-
-	private void serverTerminateAndExit(final BaseData baseData) {
-		int port = baseData.getPort();
-		TerminateClient client = new TerminateClient(port);
-		try {
-			client.connectAndTerminateOtherServer();
-		} catch (IOException | JsonException | PackageException e) {
-			e.printStackTrace();
-			System.err.println("Terminate not successfull.");
-			LogManager.exit(ExitCodes.SERVER_TERMINATION_FAIL);
-		}
-		logger.info("Termination finished.");
-		LogManager.exit(ExitCodes.OK);
-
-	}
-
-	public void restart() {
-		this.shutDownHandling(false);
-		Restart restart = new Restart();
-		restart.startRestartProcess();
-		logger.info("Server terminated (started at " + Main.this.startTime + ")");
-		LogManager.exit(ExitCodes.OK);
 	}
 
 	void shutDownHandling(final boolean out) {
@@ -482,9 +375,6 @@ public class Main {
 			}
 			this.mqtt.abort();
 		}
-		if (this.server != null) {
-			this.server.abort();
-		}
 
 		Helper.Runnable.shutdown();
 
@@ -494,10 +384,6 @@ public class Main {
 	}
 
 	public static void main(final String[] args) {
-//		try {
-//			Thread.sleep(20000);
-//		} catch (InterruptedException e) {
-//		}
 		Main main = Main.getInstance();
 		try {
 
@@ -522,25 +408,6 @@ public class Main {
 		}
 		if (waiting) {
 			logger.info("Valid system time detected after " + currentWaitTime / 1000 + "s.");
-		}
-	}
-
-	private ServerSocket openSocket(final int port) {
-		ServerSocket serverSocket = null;
-		;
-		try {
-			serverSocket = new ServerSocket(port);
-		} catch (IOException e) {
-			System.err.println("Port " + port + " is in use.");
-			System.exit(ExitCodes.SERVER_PORT_IN_USE);
-		}
-		return serverSocket;
-	}
-
-	private void closeSocket(final ServerSocket socket) {
-		try {
-			socket.close();
-		} catch (IOException e) {
 		}
 	}
 }

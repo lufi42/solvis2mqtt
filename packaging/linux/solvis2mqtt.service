@@ -1,0 +1,23 @@
+# systemd unit for running solvis2mqtt directly with a JRE (without Docker).
+# Install: see INSTALL.md next to this file.
+[Unit]
+Description=solvis2mqtt - Solvis heating via MQTT
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=solvis
+Group=solvis
+WorkingDirectory=/opt/solvis/solvis2mqtt
+ExecStart=/usr/bin/java -Xmx384m -Djava.awt.headless=true -jar /opt/solvis/solvis2mqtt/solvis2mqtt.jar --base-xml=/opt/solvis/solvis2mqtt/base.xml
+# The server stops on SIGTERM and finishes a running GUI sequence first.
+KillSignal=SIGTERM
+TimeoutStopSec=60
+# Exit code 0 = terminated on purpose (MQTT server command TERMINATE),
+# everything else (including RESTART = 24) is restarted.
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,13 +1,26 @@
 A E N D E R U N G E N
 
-Nach Version 1.0.0 (unveroeffentlicht)
+Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
+
+    Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
+    Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
+
+    18.10.2026  Entfernt: proprietaere TCP-Client-Schnittstelle (Ports 10735/10736, Argumente
+                --server-terminate und --server-restart), FHEM-Modul, Mail-Versand bei Anlagenfehlern
+                (Element ExceptionMail, Features SendMailOnError/SendMailOnErrorsCleared, Argument
+                --test-mail), Windows-Task (--create-task-xml), ioBroker-Generator (--iobroker,
+                Element Iobroker) sowie Windows-Installer, Makefile und Init-Skript (Ordner SmartHome).
+                Der Server beendet sich mit SIGTERM; der MQTT-Server-Befehl RESTART beendet den
+                Prozess mit Exit-Code 24, der Dienst-Manager startet ihn neu.
+                base.xml: Attribut port am ExecutionData-Element entfaellt, Feature
+                ClearErrorMessageAfterMail heisst jetzt ClearErrorMessage; Mqtt muss aktiviert sein.
+                Neu: packaging/linux (systemd-Unit, INSTALL.md) fuer den Betrieb ohne Docker;
+                docu/ heisst jetzt docs/.
 
     18.10.2026  Docker-Image ghcr.io/lufi42/solvis2mqtt (amd64, arm64; base.xml und SolvisServerData
                 auf einem Volume unter /data) und GitHub-Actions-Workflow: Jar bei jedem Push, Linux-Zip
                 am Release bei Tags v*, Image-Veroeffentlichung. Build ohne Ant/Maven ueber
                 scripts/build-jar.sh, Release-Paket ueber scripts/make-release-zip.sh.
-
-Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt)
 
     16.10.2026  Home Assistant: Entities einer Unit werden nach dem Solvis-Anlagenschema auf
                 Geraete verteilt (Speicher, Solaranlage, Warmwasser, Heizkreis 1-3,

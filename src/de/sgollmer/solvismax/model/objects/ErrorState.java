@@ -24,7 +24,7 @@ public class ErrorState extends Observable<ErrorState.Info> {
 
 	private final Solvis solvis;
 
-	private final boolean clearErrorMessageAfterMail;
+	private final boolean clearErrorMessage;
 	private final int resetErrorDelayTime;
 
 	private int errorState = 0;
@@ -38,7 +38,7 @@ public class ErrorState extends Observable<ErrorState.Info> {
 	public ErrorState(final Solvis solvis) {
 		this.solvis = solvis;
 
-		this.clearErrorMessageAfterMail = solvis.getUnit().getFeatures().isClearErrorMessageAfterMail();
+		this.clearErrorMessage = solvis.getUnit().getFeatures().isClearErrorMessage();
 		this.resetErrorDelayTime = solvis.getUnit().getResetErrorDelayTime();
 	}
 
@@ -160,7 +160,7 @@ public class ErrorState extends Observable<ErrorState.Info> {
 			boolean back;
 
 			synchronized (this) {
-				back = successfull && this.messageVisible && this.clearErrorMessageAfterMail
+				back = successfull && this.messageVisible && this.clearErrorMessage
 						&& this.solvis.isControlEnabled();
 			}
 

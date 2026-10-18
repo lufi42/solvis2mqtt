@@ -17,13 +17,8 @@ import javax.xml.stream.XMLStreamException;
 
 import de.sgollmer.solvismax.Constants;
 import de.sgollmer.solvismax.Constants.ExitCodes;
-import de.sgollmer.solvismax.Main;
 import de.sgollmer.solvismax.connection.ClientAssignments.ControlEnableStatus;
-import de.sgollmer.solvismax.connection.Server.Client;
 import de.sgollmer.solvismax.connection.transfer.Command;
-import de.sgollmer.solvismax.connection.transfer.ConnectedPackage;
-import de.sgollmer.solvismax.connection.transfer.ConnectionState;
-import de.sgollmer.solvismax.connection.transfer.DescriptionsPackage;
 import de.sgollmer.solvismax.error.ClientAssignmentException;
 import de.sgollmer.solvismax.error.CommandError;
 import de.sgollmer.solvismax.error.FileException;
@@ -51,11 +46,9 @@ public class CommandHandler {
 
 	private final Collection<ClientAssignments> clients;
 	private final Instances instances;
-	private long nextClientId;
 	private boolean abort = false;
 
 	public CommandHandler(final Instances instances) {
-		this.nextClientId = 0x00000000ffffffffL & Long.hashCode(System.currentTimeMillis());
 		this.instances = instances;
 		this.clients = new ArrayList<>();
 
@@ -73,18 +66,6 @@ public class CommandHandler {
 		boolean abortConnection = false;
 		try {
 			switch (command) {
-				case CONNECT:
-					abortConnection = this.connect(receivedData, client);
-					break;
-				case RECONNECT:
-					abortConnection = this.reconnect(receivedData, client);
-					break;
-				case DISCONNECT:
-					this.disconnect(receivedData, client, false);
-					break;
-				case SHUTDOWN:
-					this.disconnect(receivedData, client, true);
-					break;
 				case GET:
 					this.get(receivedData);
 					break;
@@ -266,93 +247,6 @@ public class CommandHandler {
 		}
 	}
 
-	private boolean connect(final IReceivedData receivedData, final IClient client) {
-		if (!(client instanceof Client)) {
-			logger.error("Client doesn't exists. Connection ignored.");
-			return true;
-		}
-		long clientId = this.getNewClientId();
-		((Client) client).setClientId(Long.toString(clientId));
-		if (receivedData.getSingleData().get() != null) {
-			Solvis solvis = null;
-			solvis = this.instances.getInstance((String) receivedData.getSingleData().get());
-			if (solvis == null) {
-				client.send(new ConnectionState(ConnectionStatus.CONNECTION_NOT_POSSIBLE, "Solvis id unknown"));
-				client.closeDelayed();
-				return true;
-			}
-			((Client) client).setSolvis(solvis);
-			solvis.getDistributor().register((Client) client);
-			ClientAssignments assignments = this.createClientAssignments(client);
-			assignments.add(solvis);
-			client.send(new ConnectedPackage(clientId));
-			DescriptionsPackage channelDescription = new DescriptionsPackage(solvis);
-			client.send(channelDescription);
-
-			this.sendMeasurements(solvis, (Client) client);
-		} else {
-			client.send(new ConnectedPackage(clientId)); // Only for termination
-		}
-		return false;
-	}
-
-	private boolean reconnect(final IReceivedData receivedData, final IClient client) {
-		if (!(client instanceof Client)) {
-			logger.error("Client doesn't exists. Reconnection ignored.");
-			return true;
-		}
-		String clientId = (String) receivedData.getSingleData().get();
-		((Client) client).setClientId(clientId);
-		synchronized (this) {
-			ClientAssignments assignments = this.get(client, false);
-			if (assignments != null) {
-				Solvis solvis = assignments.getSolvis();
-				((Client) client).setSolvis(solvis);
-
-				Client former = (Client) assignments.getClient(); // only Server/Client
-				if (former != null) {
-					former.close();
-					solvis.getDistributor().unregister(former);
-				}
-
-				assignments.reconnected(client);
-				solvis.getDistributor().register((Client) client);
-
-				sendMeasurements(solvis, client);
-				return false;
-			}
-		}
-		client.send(new ConnectionState(ConnectionStatus.CLIENT_UNKNOWN, "Client id unknown"));
-		client.closeDelayed();
-		return true;
-	}
-
-	private void sendMeasurements(final Solvis solvis, final IClient client) {
-		solvis.getDistributor().sendCollection(solvis.getAllSolvisData().getMeasurements());
-		client.send(solvis.getSolvisState().getSolvisStatePackage());
-		client.send(solvis.getHumanAccessPackage());
-		client.send(solvis.getSettingsPackage());
-
-	}
-
-	private void disconnect(final IReceivedData receivedData, final IClient client, final boolean shutdown)
-			throws ClientAssignmentException {
-		if (!(client instanceof Client)) {
-			logger.error("Client doesn't exists. Disconnection ignored.");
-			return;
-		}
-
-		ClientAssignments assignments = this.get(client, false);
-		Solvis solvis = client.getSolvis();
-		this.unregister(assignments);
-		((Client) client).close();
-		if (shutdown) {
-			if (this.clients.size() > 0 && !this.isSolvisConnected(solvis)) {
-				solvis.abort();
-			}
-		}
-	}
-
 	private void debugChannel(IReceivedData receivedData, IClient client)
 			throws CommandError, TypeException, IOException, TerminationException {
 
@@ -466,11 +360,10 @@ public class CommandHandler {
 	}
 
 	private void terminate(final boolean restart) {
-		if (restart) {
-			Main.getInstance().restart();
-		} else {
-			System.exit(ExitCodes.OK);
-		}
+		// The process ends here; the service manager (Docker restart policy,
+		// systemd Restart=) starts it again. Exit code 0 = terminate,
+		// RESTART_REQUESTED = restart wanted.
+		System.exit(restart ? ExitCodes.RESTART_REQUESTED : ExitCodes.OK);
 	}
 
 	private synchronized ClientAssignments get(final IClient client, boolean enableNew) {
@@ -503,35 +396,11 @@ public class CommandHandler {
 		return null;
 	}
 
-	private synchronized boolean isSolvisConnected(final Solvis solvis) {
-		for (ClientAssignments assignments : this.clients) {
-			if (assignments.getState(solvis) != null) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private synchronized long getNewClientId() {
-		return this.nextClientId++;
-	}
-
 	private synchronized void clientClosed(final ClientAssignments assignments) {
 		if (!this.abort && assignments != null) {
-			IClient client = assignments.getClient();
-			if (client instanceof Client) {
-				client.getSolvis().getDistributor().unregister((Client) client);
-			}
 			assignments.setClosingThread(new ClosingThread(assignments));
 			assignments.getClosingThread().submit();
 
-		}
-	}
-
-	synchronized void clientClosed(final Client client) {
-		ClientAssignments assignments = this.get(client, false);
-		if (assignments != null) {
-			this.clientClosed(assignments);
 		}
 	}
 

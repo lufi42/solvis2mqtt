@@ -34,9 +34,11 @@ jobs:
           CRYPT=$(java -jar solvis2mqtt.jar --string-to-crypt=test | tail -1)
           sed -e "s|writablePathLinux=\"[^\"]*\"|writablePathLinux=\"$PWD/smoke/log\"|" \
               -e "s|passwordCrypt=\"AES-coded\"|passwordCrypt=\"$CRYPT\"|g" \
+              -e "s|<tns:Unit id=|<tns:Unit csvUnit=\"true\" id=|" \
               rsc/de/sgollmer/solvismax/data/base.xml > smoke/base.xml
           java -jar solvis2mqtt.jar --base-xml="$PWD/smoke/base.xml" --channels_of_all_configurations --csvSemicolon
           test -f smoke/log/SolvisServerData/control.xml
+          test "$(wc -l < smoke/log/Appendix/SolvisAllChannels.csv)" -gt 100
 
       - uses: actions/upload-artifact@v5
         with:

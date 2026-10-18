@@ -20,6 +20,3 @@ services:
     # or run it as another user:
     # user: "1000:1000"
     stop_grace_period: 30s    # the server finishes a running GUI sequence on SIGTERM
-    # ports:
-    #   - "10735:10735"       # only for the TCP client interface (FHEM module)
-    #   - "10736:10736"
