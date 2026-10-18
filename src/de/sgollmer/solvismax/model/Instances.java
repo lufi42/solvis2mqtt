@@ -37,7 +37,6 @@ import de.sgollmer.solvismax.model.objects.backup.BackupHandler;
 import de.sgollmer.solvismax.model.objects.screen.ErrorDetection.WriteErrorScreens;
 import de.sgollmer.solvismax.model.objects.unit.Unit;
 import de.sgollmer.solvismax.smarthome.Csv;
-import de.sgollmer.solvismax.smarthome.IoBroker;
 import de.sgollmer.solvismax.smarthome.MaskIterator;
 import de.sgollmer.solvismax.smarthome.MaskIterator.OneConfiguration;
 import de.sgollmer.solvismax.xml.ControlFileReader;
@@ -227,9 +226,6 @@ public class Instances {
 		Solvis solvis = new Solvis(unit, this.solvisDescription, this.graficDatas.get(unit.getId(), this.xmlHash),
 				connection, this.baseData.getMqtt(), this.backupHandler, timeZone,
 				this.baseData.getEchoInhibitTime_ms(), this.writeablePath, mustLearn);
-		if (this.baseData.getExceptionMail() != null && solvis.getFeatures().isSendMailOnError()) {
-			solvis.registerSolvisErrorObserver(this.baseData.getExceptionMail());
-		}
 		solvis.registerSolvisErrorObserver(this.writeErrorScreens);
 		return solvis;
 	}
@@ -276,10 +272,6 @@ public class Instances {
 
 	public boolean mustLearn() {
 		return this.mustLearn;
-	}
-
-	public IoBroker getIobroker() {
-		return this.baseData.getIoBroker();
 	}
 
 	public Mqtt getMqtt() {

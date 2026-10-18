@@ -82,7 +82,6 @@ public class Constants {
 	public static final int AVERAGE_COUNT_SOLVIS_CLOCK_PRECISION_CALCULATION = 10;
 	public static final double PRECISION_DOUBLE = 0.000001D;
 
-	public static final int MAX_WAIT_TIME_TERMINATING_OTHER_SERVER = 60000;
 	public static final int NUMBER_OF_CONTROL_FILE_DUPLICATES = 3;
 
 	public static final int MODBUS_SLAVE_ID = 1;
@@ -144,19 +143,15 @@ public class Constants {
 	public static class ExitCodes {
 		public static final int OK = 0;
 		public static final int READING_CONFIGURATION_FAIL = 10;
-		public static final int SERVER_PORT_IN_USE = 11;
-		public static final int SERVER_TERMINATION_FAIL = 12;
-		public static final int RESTART_FAILURE = 13;
 		public static final int LEARNING_FAILED = 14;
 		public static final int LEARNING_NECESSARY = 15;
 		public static final int ARGUMENT_FAIL = 16;
 		public static final int CRYPTION_FAIL = 17;
-		public static final int MAILING_ERROR = 18;
 		public static final int BASE_XML_ERROR = 19;
 		public static final int XML_VERIFICATION_ERROR = 20;
 		public static final int MQTT_ERROR = 21;
-		public static final int TASK_CREATING_ERROR = 22;
 		public static final int SOLVIS_UNIT_ERROR = 23;
+		public static final int RESTART_REQUESTED = 24;
 	}
 
 	public static class Mqtt {
@@ -190,7 +185,6 @@ public class Constants {
 	public static class Debug {
 
 		public static final int USER_ACCESS_TIME = 60000;
-		public static final boolean NO_MAIL = false; // kein Mailversand
 		public static final boolean SCREEN_SAVER_DETECTION = false; // more debugging info
 		public static final boolean DEBUG_TWO_STATIONS = false;
 
@@ -201,7 +195,7 @@ public class Constants {
 		public static final boolean OVERWRITE_ONLY_ON_LEARN = false;
 
 		private static NoDebug[] NO_DEBUGS = new NoDebug[] { new NoDebug(BaseData.class, "DEBUG", false),
-				new NoDebug("NO_MAIL", false), new NoDebug("SCREEN_SAVER_DETECTION", false),
+				new NoDebug("SCREEN_SAVER_DETECTION", false),
 				new NoDebug("DEBUG_TWO_STATIONS", false), new NoDebug("SOLVIS_RESULT_NULL", false),
 				new NoDebug("BURST", false), new NoDebug("OVERWRITE_ONLY_ON_LEARN", false) };
 
@@ -271,11 +265,4 @@ public class Constants {
 				INCREMENT_CHANGE, CHANGED_INCREMENT, MODES, ALIAS };
 	}
 
-	public static class IoBroker {
-		public static final String PAIRING_SCRIPT_NAME = "solvis_pairing.js";
-		public static final String OBJECT_LIST_NAME = "solvis2mqtt.json";
-		public static final String DEFAULT_MQTT_INTERFACE = "mqtt-client.0";
-		public static final String DEFAULT_JAVASCRIPT_INTERFACE = "javascript.0";
-		public static final String DEFAULT_IOBROKER_ID = "IoBroker";
-	}
 }

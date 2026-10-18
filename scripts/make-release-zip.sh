@@ -16,9 +16,7 @@ mkdir -p "$DIR"
 cp "$JAR" "$DIR/solvis2mqtt.jar"
 cp rsc/de/sgollmer/solvismax/data/base.xml "$DIR/base.xml.new"
 cp rsc/de/sgollmer/solvismax/data/base.xsd "$DIR/"
-cp docu/SolvisSmartHomeServer.pdf "$DIR/"
-for f in SmartHome/FHEM/73_SolvisClient.pm SmartHome/Linux/solvis2mqtt.service \
-	SmartHome/Linux/solvis2mqtt-debug.service SmartHome/Linux/Makefile docu/CHANGES.txt; do
+for f in packaging/linux/solvis2mqtt.service packaging/linux/INSTALL.md docs/CHANGES.txt; do
 	tr -d '\r' < "$f" > "$DIR/$(basename "$f")"
 done
 

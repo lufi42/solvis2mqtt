@@ -24,9 +24,7 @@ public class Features {
 		XML_DETECT_SERVICE_ACCESS("DetectServiceAccess", false), //
 		XML_END_OF_USER_BY_SCREEN_SAVER("EndOfUserInterventionDetectionThroughScreenSaver", false), //
 		XMl_POWEROFF_IS_SERVICE_ACCESS("PowerOffIsServiceAccess", false), //
-		XMl_SEND_MAIL_ON_ERROR("SendMailOnError", false), //
-		XMl_SEND_MAIL_ON_ERRORS_CLEARED("SendMailOnErrorsCleared", false), //
-		XMl_CLEAR_ERROR_MESSAGE_AFTER_MAIL("ClearErrorMessageAfterMail", true), //
+		XML_CLEAR_ERROR_MESSAGE("ClearErrorMessage", true), //
 		XML_ONLY_MEASUREMENT("OnlyMeasurements", true), //
 		XML_INTERACTIVE_GUI_ACCESS("InteractiveGUIAccess", false), //
 		XML_ADMIN("Admin", false), //
@@ -113,20 +111,12 @@ public class Features {
 		return this.get(FeatureSetting.XML_DETECT_SERVICE_ACCESS);
 	}
 
-	public boolean isClearErrorMessageAfterMail() {
-		return this.get(FeatureSetting.XMl_CLEAR_ERROR_MESSAGE_AFTER_MAIL);
+	public boolean isClearErrorMessage() {
+		return this.get(FeatureSetting.XML_CLEAR_ERROR_MESSAGE);
 	}
 
 	public boolean isPowerOffIsServiceAccess() {
 		return this.get(FeatureSetting.XMl_POWEROFF_IS_SERVICE_ACCESS);
-	}
-
-	public boolean isSendMailOnError() {
-		return this.get(FeatureSetting.XMl_SEND_MAIL_ON_ERROR);
-	}
-
-	public boolean isSendMailOnErrorsCleared() {
-		return this.isSendMailOnError() && this.get(FeatureSetting.XMl_SEND_MAIL_ON_ERRORS_CLEARED);
 	}
 
 	public boolean isEndOfUserByScreenSaver() {
@@ -212,17 +202,6 @@ public class Features {
 
 	public Map<String, Boolean> getMap() {
 		return this.features;
-	}
-
-	public void checkMail(final String unitId) {
-		if (!this.isSendMailOnError()) {
-			logger.error("Mail was sent, but the mail is not activated for the unit \"" + unitId
-					+ "\". Attributes involved:");
-			logger.error(FeatureSetting.XMl_SEND_MAIL_ON_ERROR + ": " + Boolean.toString(this.isSendMailOnError()));
-			logger.error(FeatureSetting.XMl_SEND_MAIL_ON_ERRORS_CLEARED + ": "
-					+ Boolean.toString(this.isSendMailOnErrorsCleared()));
-		}
-
 	}
 
 }

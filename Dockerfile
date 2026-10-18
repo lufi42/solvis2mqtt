@@ -39,8 +39,7 @@ COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh
 USER solvis
 WORKDIR /data
 VOLUME /data
-# TCP client interface (FHEM module, --server-terminate); not needed for MQTT
-EXPOSE 10735 10736
+# The server only talks to the Solvis unit and the MQTT broker, no ports to expose.
 STOPSIGNAL SIGTERM
 
 ENTRYPOINT ["/app/entrypoint.sh"]

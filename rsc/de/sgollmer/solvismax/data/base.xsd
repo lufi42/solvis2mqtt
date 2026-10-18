@@ -31,17 +31,6 @@
 			<element name="Mqtt" type="tns:Mqtt" maxOccurs="1"
 				minOccurs="0">
 			</element>
-			<element name="ExceptionMail" type="tns:ExceptionMail"
-				maxOccurs="1" minOccurs="0">
-				<annotation>
-					<documentation>
-						Daten für den Mailversand im Fall einer
-						Exception
-					</documentation>
-				</annotation>
-			</element>
-			<element name="Iobroker" type="tns:Iobroker" maxOccurs="1"
-				minOccurs="0"></element>
 		</sequence>
 		<attribute name="DEBUG" type="boolean" use="optional">
 			<annotation>
@@ -351,7 +340,7 @@
 				<documentation>Default: 5min. Die SolvisMax5 scheint bestimmte
 					Fehler regelmäßig zu prüfen. Dazu setzt sie den Fehler erst zurück
 					um dann nach ca. 1 Minute später den Test auszuführen. Das führt zu
-					unnötigen Fehler-behoben-Mails
+					unnötigen Fehler-behoben-Meldungen
 				</documentation>
 			</annotation>
 		</attribute>
@@ -371,14 +360,6 @@
 			<annotation>
 				<documentation>
 					Zeitzone, wird aktuell nicht genutzt
-				</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="port" type="int" use="required">
-			<annotation>
-				<documentation>Port, den der Server nutzt, um Command von Client zu
-					empfangen. Es wird ebenfalls der nächsthöherer Port genutzt um
-					sicher zu stellen, dass nicht 2 Server gleichzeitig gestartet sind.
 				</documentation>
 			</annotation>
 		</attribute>
@@ -415,7 +396,7 @@
 				Brennerstarts Erneutes Auslesen des
 				aktuellen Standes der Anlage nach
 				einem Userzugriff
-				Steuerung über FHEM
+				Steuerung über MQTT
 			</documentation>
 		</annotation>
 		<sequence>
@@ -471,10 +452,7 @@
 						</documentation>
 					</annotation>
 				</element>
-				<element name="SendMailOnError" type="boolean" maxOccurs="1"
-					minOccurs="1">
-				</element>
-				<element name="ClearErrorMessageAfterMail" type="boolean"
+				<element name="ClearErrorMessage" type="boolean"
 					maxOccurs="1" minOccurs="1">
 				</element>
 				<element name="OnlyMeasurements" type="boolean"
@@ -516,76 +494,8 @@
 
 
 
-	<complexType name="ExceptionMail">
-		<sequence>
-			<element name="Recipients" type="tns:Recipients"></element>
-			<element name="Proxy" type="tns:Proxy" maxOccurs="1"
-				minOccurs="0">
-				<annotation>
-					<documentation>Proxy-Definition, wenn Mail_versand nur über Proy
-						möglich.
-					</documentation>
-				</annotation>
-			</element>
-		</sequence>
-		<attribute name="name" type="string" use="required">
-			<annotation>
-				<documentation>Absendername</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="from" type="string" use="required">
-			<annotation>
-				<documentation>Adresse für den Provider zum Senden</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="passwordCrypt" type="string" use="required">
-			<annotation>
-				<documentation>Password verschlüsselt</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="securityType" use="required">
-			<annotation>
-				<documentation>Aktuell TLS/SSL</documentation>
-			</annotation>
-			<simpleType>
-				<restriction base="string">
-					<enumeration value="TLS"></enumeration>
-					<enumeration value="SSL"></enumeration>
-					<enumeration value="NONE"></enumeration>
-				</restriction>
-			</simpleType>
-		</attribute>
-		<attribute name="provider" type="string" use="required">
-			<annotation>
-				<documentation>Provider-Adresse</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="port" type="int" use="required">
-			<annotation>
-				<documentation>Provider-Port</documentation>
-			</annotation>
-		</attribute>
-	</complexType>
 
-	<complexType name="Recipient">
-		<attribute name="address" type="string" use="required"></attribute>
-		<attribute name="type" use="required">
-			<simpleType>
-				<restriction base="string">
-					<enumeration value="CC"></enumeration>
-					<enumeration value="TO"></enumeration>
-					<enumeration value="BCC"></enumeration>
-				</restriction>
-			</simpleType>
-		</attribute>
-	</complexType>
 
-	<complexType name="Recipients">
-		<sequence>
-			<element name="Recipient" type="tns:Recipient"
-				maxOccurs="unbounded" minOccurs="1"></element>
-		</sequence>
-	</complexType>
 
 	<simpleType name="UnNBytesHexInt">
 		<union memberTypes="unsignedInt">
@@ -707,9 +617,7 @@
 						value="EndOfUserInterventionDetectionThroughScreenSaver">
 					</enumeration>
 					<enumeration value="UpdateAfterUserAccess"></enumeration>
-					<enumeration value="SendMailOnError"></enumeration>
-					<enumeration value="SendMailOnErrorsCleared"></enumeration>
-					<enumeration value="ClearErrorMessageAfterMail"></enumeration>
+					<enumeration value="ClearErrorMessage"></enumeration>
 					<enumeration value="Min_Vorlauf_Temp"></enumeration>
 					<enumeration value="BetriebsartVT_HK"></enumeration>
 					<enumeration value="WW_Pumpe_Min_Laufzeit"></enumeration>
@@ -720,43 +628,6 @@
 		<attribute name="value" type="boolean" use="required"></attribute>
 	</complexType>
 
-	<complexType name="Proxy">
-		<annotation>
-			<documentation>Proxy-Definitionen</documentation>
-		</annotation>
-		<attribute name="host" type="string" use="required">
-			<annotation>
-				<documentation> Specifies the host name of an HTTP web proxy server
-					that will be used for connections to the mail server.
-				</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="port" type="nonNegativeInteger"
-			use="required">
-			<annotation>
-				<documentation>Specifies the port number for the HTTP web proxy
-					server.
-				</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="user" type="string" use="optional">
-			<annotation>
-				<documentation> Specifies the user name to use to authenticate with
-					the HTTP web proxy server. By default, no authentication is done.
-				</documentation>
-			</annotation>
-		</attribute>
-		<attribute name="passwordCrypt" type="string" use="optional">
-			<annotation>
-				<documentation> Specifies the password to use to authenticate with
-					the HTTP web proxy server. By default, no authentication is done.
-
-					Das Password muss mit dem Make-File oder in Windows über das
-					StarMenü verschlüsselt sein.
-				</documentation>
-			</annotation>
-		</attribute>
-	</complexType>
 
 	<complexType name="IgnoredChannels">
 		<sequence maxOccurs="unbounded" minOccurs="0">
@@ -888,12 +759,6 @@
 		</restriction>
 	</simpleType>
 
-	<complexType name="Iobroker">
-
-		<attribute name="mqttInterface" type="string" use="required"></attribute>
-		<attribute name="javascriptInterface" type="string"
-			use="required"></attribute>
-	</complexType>
 
 
 

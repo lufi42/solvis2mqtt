@@ -509,10 +509,6 @@ public class Unit implements IAccountInfo {
 		return this.channelOptions;
 	}
 
-	public boolean isMailEnabled() {
-		return this.features.isSendMailOnError();
-	}
-
 	public int getResetErrorDelayTime() {
 		return this.resetErrorDelayTime_ms;
 	}
