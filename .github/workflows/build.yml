@@ -28,6 +28,9 @@ jobs:
       - name: Build jar
         run: scripts/build-jar.sh
 
+      - name: Unit tests (JUnit 5, offline)
+        run: scripts/test.sh
+
       - name: Smoke test (offline, documentation mode)
         run: |
           mkdir -p smoke/log

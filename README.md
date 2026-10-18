@@ -336,12 +336,15 @@ Störungskanäle zur Verfügung, die Benachrichtigung übernimmt das Smart-Home-
 
 ```sh
 scripts/build-jar.sh                 # baut solvis2mqtt.jar (JDK 8 oder neuer, kein Ant/Maven)
+scripts/test.sh                      # JUnit-5-Tests aus test/ (Launcher liegt in lib/test)
 docker build -t solvis2mqtt .        # oder das Image
 ```
 
-Die Quellen sind Cp1252-kodiert. GitHub Actions baut bei jedem Push das Jar mit einem Offline-Test, hängt bei Tags
-`v*` das Linux-Zip an das Release und veröffentlicht das Image. Änderungen stehen in
-[docs/CHANGES.txt](docs/CHANGES.txt).
+Die Quellen unter `src/` sind Cp1252-kodiert, die Tests unter `test/` UTF-8. Die Tests laufen offline gegen die
+mitgelieferte `base.xml` (Fixture `OfflineInstances`, initialisiert wie der Dokumentationsmodus): Topic-Analyse,
+Wert-Rundreise für MQTT-Payloads, Aufräumen veralteter Topics, Rückstellung von Abhängigkeiten. GitHub Actions
+baut bei jedem Push das Jar, führt Tests und einen Offline-Smoke-Test aus, hängt bei Tags `v*` das Linux-Zip an das
+Release und veröffentlicht das Image. Änderungen stehen in [docs/CHANGES.txt](docs/CHANGES.txt).
 
 ## Lizenz
 
