@@ -101,7 +101,9 @@ Die Datei wird gegen `base.xsd` validiert; dort sind alle Attribute dokumentiert
   Heizkreises (kein Kanal, keine Entity).
 * **Schreibzugriff:** nur mit Feature `InteractiveGUIAccess`. Ohne dieses Feature liest der Server nur die
   XML-Schnittstelle; alle Kanäle der SolvisControl-Oberfläche (`C*`) entfallen dann.
-* **Passwörter** stehen verschlüsselt in der Datei (`--string-to-crypt`).
+* **Passwörter** stehen verschlüsselt in der Datei (`--string-to-crypt`). Die Verschlüsselung nutzt einen festen
+  Schlüssel im Programm: sie verhindert das Mitlesen im Klartext, nicht die Entschlüsselung durch jemanden mit Zugriff
+  auf die Datei. Die `base.xml` daher nur für den Dienstbenutzer lesbar halten (`chmod 600`) und nicht in Repos ablegen.
 
 Vor dem ersten Start und nach jeder Änderung der `control.xml` ist ein **Learning** nötig (`--server-learn`):
 Der Server fährt alle Screens an und merkt sich deren Erkennungsmerkmale im Datenverzeichnis. Während des
@@ -190,6 +192,88 @@ oder Namen gehen dabei verloren.
 
 Zusätzliche Status-Entities: Verbindungsstatus, GUI-Status, Anlagenzugriff (je `sensor`) und „Schreibzugriff
 aktiviert“ (`binary_sensor`).
+
+## Betrieb
+
+### Kommandozeile
+
+Argument | Wirkung
+--- | ---
+`--base-xml=<pfad>` | zu verwendende `base.xml` (Standard: neben dem Jar; im Container `/data/base.xml`)
+`--string-to-crypt=<text>` | gibt die verschlüsselte Form eines Passworts aus und beendet sich
+`--server-learn` | Learning erzwingen, danach normaler Start
+`--documentation [--csvSemicolon]` | Kanalliste und Screens der konfigurierten Units als CSV nach `Appendix/` schreiben und beenden; liest die Lerndaten nur
+`--channels_of_all_configurations [--csvSemicolon]` | Kanäle aller möglichen Anlagenkonfigurationen als CSV schreiben (Units mit `csvUnit="true"`) und beenden
+
+Ohne Argument startet der Server. Im Container stehen die Argumente hinter dem Image-Namen.
+
+### Logs
+
+Auf der Konsole (`docker logs`) erscheint nur die Startzeile. Das eigentliche Log schreibt der Server in das
+Datenverzeichnis: `SolvisServerData/solvis-tiny.log.0` (aktuell, rotiert bei 1 MB nach `.1`, `.2`, …) und
+`solvis-error.log.0` nur für Fehler. Die Konfiguration liegt daneben in `tinylog.properties` und wird beim ersten Start
+aus dem Programm dorthin kopiert; Anpassungen (Level, Anzahl der Dateien) bleiben bei Updates erhalten.
+
+### Datenverzeichnis
+
+`writablePathLinux` bzw. `writeablePathWindows` aus der `base.xml`, im Container `/data`. Darin legt der Server
+`SolvisServerData` an:
+
+Inhalt | Bedeutung | Sichern?
+--- | --- | ---
+`graficData.xml`, `LearnedImages/` | Ergebnis des Learnings (Erkennungsmerkmale der Screens) | ja, erspart ein neues Learning
+`measurements.xml` | Sicherung der Zähler und Mittelwerte, wird regelmäßig und beim Beenden geschrieben | ja
+`control.xml`, `control.xsd`, `*.xsd` | Kopien der eingebauten Beschreibungen zum Nachlesen | nein, werden neu geschrieben
+`SolvisErrorImages/` | Bildschirmfotos erkannter Fehlerscreens | nach Bedarf
+`solvis-*.log*`, `tinylog.properties` | Logs und deren Konfiguration | nein (Konfiguration ja, falls angepasst)
+`ha-groups.properties`, `ha-labels.properties` | eigene Overrides für Home Assistant (optional, selbst angelegt) | ja
+`Appendix/` | CSV-Ausgaben des Dokumentationsmodus | nein
+
+### Updates
+
+Neues Image ziehen und den Container neu erstellen (`docker compose pull && docker compose up -d`), vorher
+`GUI_COMMANDS_DISABLE` wie unter [Installation](#installation-mit-docker) beschrieben. Beim Start vergleicht der Server
+die Lerndaten mit der eingebauten `control.xml` und mit den Features der `base.xml`. Passen sie nicht mehr, **lernt er
+automatisch neu**: einige Minuten ohne Messwerte, in denen die SolvisRemote nicht bedient werden darf. Ob eine Version
+die `control.xml` ändert, steht in den Release Notes und in [docs/CHANGES.txt](docs/CHANGES.txt); ein Lauf mit
+`--documentation` vorab bricht mit Exit-Code 15 und der Meldung „Learning is necessarry“ ab, ohne etwas zu verändern.
+
+### Zeit und Speicher
+
+Mit dem Feature `ClockTuning` stellt der Server die Uhr der SolvisControl nach seiner eigenen Systemzeit. Die Zeit des
+Hosts bzw. Containers muss daher stimmen (NTP), und `timeZone` in der `base.xml` sollte zur Zeitzone des Containers
+(`TZ`) passen. Der Heap ist mit `-Xmx384m` ausreichend bemessen; das Learning braucht etwa 300 MB, mit deutlich weniger
+bricht es ab.
+
+### Exit-Codes
+
+Code | Bedeutung
+--- | ---
+0 | regulär beendet (SIGTERM, Server-Befehl `TERMINATE`, Dokumentationsmodus)
+24 | Neustart gewünscht (Server-Befehl `RESTART`), der Dienst-Manager soll neu starten
+10 | Konfiguration oder Lerndaten nicht lesbar
+15 | Learning nötig (nur im Dokumentationsmodus, der Server lernt sonst selbst)
+16, 17 | ungültiges Argument bzw. Fehler beim Verschlüsseln
+19, 20 | `base.xml` fehlt, ist ungültig oder passt nicht zum Schema
+21 | MQTT nicht konfiguriert, nicht aktiviert oder Verbindung zum Broker fehlgeschlagen
+23 | Anlagenfehler während des Learnings
+
+Mit `restart: unless-stopped` (Docker) startet der Container bei jedem Code neu, auch bei 0; mit systemd
+`Restart=on-failure` nur bei Codes ungleich 0.
+
+## Bekannte Schwächen
+
+* **Stoppen während eines GUI-Zugriffs.** Einige Kanäle werden über Umwege gelesen, bei denen der Server einen anderen
+  Wert vorübergehend verstellt und danach zurücksetzt (z. B. Tages-/Nachttemperatur eines Heizkreises über dessen
+  Betriebsart). SIGTERM und `TERMINATE` warten diese Rückstellung nicht ab, und die Rückstellung verwendet den zuletzt
+  gespeicherten Wert, nicht den aktuellen. Ein Stopp zur falschen Zeit kann die Anlage in einem Zwischenzustand
+  lassen. Daher vor jedem geplanten Stopp `GUI_COMMANDS_DISABLE` senden und `gui_access` abwarten.
+* **Nur ein steuernder Client.** Die Weboberfläche der SolvisRemote verträgt genau einen Bediener. Paralleles Lesen
+  der XML-Schnittstelle durch andere Programme ist unkritisch, solange die Last klein bleibt (im Log auf „Preparation
+  not successful“ achten); paralleles Bedienen, auch von Hand im Browser, kollidiert mit den GUI-Sequenzen des Servers.
+  Zwei Server-Instanzen gegen dieselbe Anlage dürfen nie gleichzeitig laufen.
+* **Erkennung ist bildbasiert.** Learning und OCR hängen von Sprache, Firmware und Darstellung der SolvisControl ab.
+  Nach Firmware-Updates der Anlage oder Änderungen in der Anlagenkonfiguration ist ein neues Learning nötig.
 
 ## Umstieg vom SolvisSmartHomeServer
 
