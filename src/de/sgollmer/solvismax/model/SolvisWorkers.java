@@ -87,6 +87,8 @@ public class SolvisWorkers {
 		private long nextWatchDogTime = 0L;
 		private boolean forceRestoreScreen = false;
 		private boolean messageErrorVisible = false;
+		private Command currentCommand = null;
+		private boolean terminating = false;
 
 		private ControlWorkerThread() {
 			super("ControlWorkerThread");
@@ -147,7 +149,7 @@ public class SolvisWorkers {
 					synchronized (this) {
 
 						boolean queueInhibit = !SolvisWorkers.this.solvis.isControlEnabled()
-								|| this.messageErrorVisible;
+								|| this.messageErrorVisible || this.terminating;
 
 						if (this.queue.isEmpty()) {
 							this.handleCommandAddedRemoved(null, false);
@@ -271,7 +273,18 @@ public class SolvisWorkers {
 
 			String commandString = command.toString();
 			logger.debug("Command <" + commandString + "> will be executed");
-			ResultStatus status = execute(command);
+			ResultStatus status;
+			synchronized (this) {
+				this.currentCommand = command;
+			}
+			try {
+				status = execute(command);
+			} finally {
+				synchronized (this) {
+					this.currentCommand = null;
+					this.notifyAll();
+				}
+			}
 
 			if (status == ResultStatus.INTERRUPTED) {
 				logger.debug("Command <" + commandString + "> was interrupted. will be continued.");
@@ -319,6 +332,40 @@ public class SolvisWorkers {
 		private synchronized void abort() {
 			this.abort = true;
 			this.notifyAll();
+		}
+
+		/**
+		 * Shutdown: no further command is started; a running command only restores
+		 * its dependencies. Waits until that is done or the deadline is reached.
+		 * 
+		 * @return false if the running command didn't finish in time
+		 */
+		private synchronized boolean terminateGracefully(final long deadline) {
+			this.terminating = true;
+			Command command = this.currentCommand;
+			if (command == null) {
+				return true;
+			}
+			if (command instanceof CommandControl) {
+				CommandControl control = (CommandControl) command;
+				control.requestRestoreOnly();
+				logger.info("Shutdown: waiting for command <" + control.toString() + "> to restore its dependencies"
+						+ (control.hasPendingRestore() ? "" : " (nothing to restore)") + ".");
+			}
+			while (this.currentCommand != null) {
+				long wait = deadline - System.currentTimeMillis();
+				if (wait <= 0) {
+					logger.error("Shutdown: command <" + command.toString()
+							+ "> didn't finish in time, dependencies may be left unrestored (see pending restore file).");
+					return false;
+				}
+				try {
+					this.wait(wait);
+				} catch (InterruptedException e) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		private void push(final Command command) {
@@ -532,6 +579,20 @@ public class SolvisWorkers {
 			return;
 		}
 		this.controlsThread.push(command);
+	}
+
+	/**
+	 * @see ControlWorkerThread#terminateGracefully(long)
+	 */
+	public boolean terminateGracefully(final long deadline) {
+		ControlWorkerThread thread;
+		synchronized (this) {
+			thread = this.controlsThread;
+		}
+		if (thread == null) {
+			return true;
+		}
+		return thread.terminateGracefully(deadline);
 	}
 
 	private void abort() {

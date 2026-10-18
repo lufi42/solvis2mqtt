@@ -57,10 +57,9 @@ docker run -d --name solvis2mqtt --restart unless-stopped --stop-timeout 30 -v .
 
 Alle Argumente hinter dem Image-Namen gehen an den Server. Der Container läuft als Benutzer mit UID 1000, das
 Verzeichnis `data` muss für diesen schreibbar sein (oder `--user` setzen). Die Heap-Größe steht in `JAVA_OPTS`
-(Default `-Xmx384m`, das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM, meldet sich beim
-Broker ab und bricht eine laufende GUI-Sequenz ab. Vor einem geplanten Stopp daher `GUI_COMMANDS_DISABLE` über
-MQTT absetzen und warten, bis `gui_access` nicht mehr `CONTROL_WRITE_ONGOING` zeigt; sonst kann die Anlage in einem
-Zwischenzustand der Sequenz zurückbleiben. `--stop-timeout 30` bzw. `stop_grace_period` lassen dem Abmelden Zeit.
+(Default `-Xmx384m`, das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM, bricht eine laufende
+GUI-Sequenz ab, setzt dabei verstellte Werte zurück (bis zu 25 s) und meldet sich beim Broker ab; `--stop-timeout 30`
+bzw. `stop_grace_period: 30s` geben ihm die Zeit dafür (siehe [Bekannte Schwächen](#bekannte-schwächen)).
 Ein Beispiel für Docker Compose liegt in [docker/compose.yaml](docker/compose.yaml).
 
 Ohne Docker: [packaging/linux/INSTALL.md](packaging/linux/INSTALL.md) (Jar, systemd-Unit).
@@ -223,6 +222,7 @@ Inhalt | Bedeutung | Sichern?
 --- | --- | ---
 `graficData.xml`, `LearnedImages/` | Ergebnis des Learnings (Erkennungsmerkmale der Screens) | ja, erspart ein neues Learning
 `measurements.xml` | Sicherung der Zähler und Mittelwerte, wird regelmäßig und beim Beenden geschrieben | ja
+`pending-restore-<unitId>.properties` | nur vorhanden, solange eine GUI-Sequenz Werte verstellt hat, die noch zurückgesetzt werden müssen | nein, nicht löschen
 `control.xml`, `control.xsd`, `*.xsd` | Kopien der eingebauten Beschreibungen zum Nachlesen | nein, werden neu geschrieben
 `SolvisErrorImages/` | Bildschirmfotos erkannter Fehlerscreens | nach Bedarf
 `solvis-*.log*`, `tinylog.properties` | Logs und deren Konfiguration | nein (Konfiguration ja, falls angepasst)
@@ -231,8 +231,8 @@ Inhalt | Bedeutung | Sichern?
 
 ### Updates
 
-Neues Image ziehen und den Container neu erstellen (`docker compose pull && docker compose up -d`), vorher
-`GUI_COMMANDS_DISABLE` wie unter [Installation](#installation-mit-docker) beschrieben. Beim Start vergleicht der Server
+Neues Image ziehen und den Container neu erstellen (`docker compose pull && docker compose up -d`); der Server
+setzt beim Stoppen verstellte Werte zurück (siehe [Bekannte Schwächen](#bekannte-schwächen)). Beim Start vergleicht der Server
 die Lerndaten mit der eingebauten `control.xml` und mit den Features der `base.xml`. Passen sie nicht mehr, **lernt er
 automatisch neu**: einige Minuten ohne Messwerte, in denen die SolvisRemote nicht bedient werden darf. Ob eine Version
 die `control.xml` ändert, steht in den Release Notes und in [docs/CHANGES.txt](docs/CHANGES.txt); ein Lauf mit
@@ -265,9 +265,11 @@ Mit `restart: unless-stopped` (Docker) startet der Container bei jedem Code neu,
 
 * **Stoppen während eines GUI-Zugriffs.** Einige Kanäle werden über Umwege gelesen, bei denen der Server einen anderen
   Wert vorübergehend verstellt und danach zurücksetzt (z. B. Tages-/Nachttemperatur eines Heizkreises über dessen
-  Betriebsart). SIGTERM und `TERMINATE` warten diese Rückstellung nicht ab, und die Rückstellung verwendet den zuletzt
-  gespeicherten Wert, nicht den aktuellen. Ein Stopp zur falschen Zeit kann die Anlage in einem Zwischenzustand
-  lassen. Daher vor jedem geplanten Stopp `GUI_COMMANDS_DISABLE` senden und `gui_access` abwarten.
+  Betriebsart). Bei SIGTERM und `TERMINATE` bricht der Server den laufenden Befehl ab, setzt aber die verstellten
+  Werte zuerst zurück (bis zu 25 s, daher `stop_grace_period` ≥ 30 s). Die Originalwerte merkt er sich außerdem in
+  `SolvisServerData/pending-restore-<unitId>.properties`; wird der Prozess hart beendet (`kill -9`, Stromausfall),
+  schreibt er sie beim nächsten Start als Erstes zurück und meldet das im Log. Ein `GUI_COMMANDS_DISABLE` vor einem
+  geplanten Stopp ist damit nicht mehr nötig, schadet aber nicht.
 * **Nur ein steuernder Client.** Die Weboberfläche der SolvisRemote verträgt genau einen Bediener. Paralleles Lesen
   der XML-Schnittstelle durch andere Programme ist unkritisch, solange die Last klein bleibt (im Log auf „Preparation
   not successful“ achten); paralleles Bedienen, auch von Hand im Browser, kollidiert mit den GUI-Sequenzen des Servers.

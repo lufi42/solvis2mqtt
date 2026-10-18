@@ -360,6 +360,10 @@ public class Main {
 			return;
 		}
 		this.shutdownExecuted = true;
+		if (this.instances != null) {
+			// let a running GUI command restore its dependencies before anything is aborted
+			this.instances.terminateGracefully(Constants.SHUTDOWN_RESTORE_TIMEOUT_MS);
+		}
 		AbortHelper.getInstance().abort();
 		if (this.instances != null) {
 			this.instances.abort();

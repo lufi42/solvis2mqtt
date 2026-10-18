@@ -5,6 +5,14 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
     Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
     Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
+    18.10.2026  Rueckstellung von Abhaengigkeiten (Issue #16): Beim Lesen mancher Kanaele verstellt der
+                Server voruebergehend einen anderen Kanal (z. B. C12 fuer C13/C14). Der Originalwert wird
+                jetzt beim Verstellen gemerkt und exakt dieser zurueckgeschrieben, nicht der aktuelle
+                Inhalt des Datenspeichers. Die offenen Rueckstellungen stehen in
+                SolvisServerData/pending-restore-<unitId>.properties; nach einem harten Abbruch werden
+                sie beim naechsten Start als Erstes nachgeholt. Bei SIGTERM/TERMINATE bricht der Server
+                den laufenden Befehl ab, fuehrt aber die Rueckstellung noch aus (max. 25 s).
+
     18.10.2026  Entfernt: proprietaere TCP-Client-Schnittstelle (Ports 10735/10736, Argumente
                 --server-terminate und --server-restart), FHEM-Modul, Mail-Versand bei Anlagenfehlern
                 (Element ExceptionMail, Features SendMailOnError/SendMailOnErrorsCleared, Argument

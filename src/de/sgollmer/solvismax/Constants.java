@@ -83,6 +83,11 @@ public class Constants {
 	public static final double PRECISION_DOUBLE = 0.000001D;
 
 	public static final int NUMBER_OF_CONTROL_FILE_DUPLICATES = 3;
+	/**
+	 * On shutdown the server waits this long for a running GUI command to
+	 * restore its dependencies before the connections are aborted.
+	 */
+	public static final int SHUTDOWN_RESTORE_TIMEOUT_MS = 25000;
 
 	public static final int MODBUS_SLAVE_ID = 1;
 
@@ -116,6 +121,8 @@ public class Constants {
 	public static class Files {
 		public static final int INPUT_BUFFER_SIZE = 8192;
 		public static final String RESOURCE_DESTINATION = "SolvisServerData";
+		public static final String PENDING_RESTORE_PREFIX = "pending-restore-";
+		public static final String PENDING_RESTORE_SUFFIX = ".properties";
 		public static final String LEARN_DESTINATION = "LearnedImages";
 		public static final String APPENDIX_DESTINATION = "Appendix";
 		public static final String SOLVIS_ERROR_DESTINATION = "SolvisErrorImages";

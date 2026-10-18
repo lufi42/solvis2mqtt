@@ -11,8 +11,8 @@ User=solvis
 Group=solvis
 WorkingDirectory=/opt/solvis/solvis2mqtt
 ExecStart=/usr/bin/java -Xmx384m -Djava.awt.headless=true -jar /opt/solvis/solvis2mqtt/solvis2mqtt.jar --base-xml=/opt/solvis/solvis2mqtt/base.xml
-# The server stops on SIGTERM; a running GUI sequence is aborted, so send the MQTT
-# server command GUI_COMMANDS_DISABLE before a planned stop.
+# The server stops on SIGTERM; values changed by a running GUI sequence are
+# restored first (up to 25 s), therefore the stop timeout must stay above that.
 KillSignal=SIGTERM
 TimeoutStopSec=60
 # Exit code 0 = terminated on purpose (MQTT server command TERMINATE),

@@ -19,5 +19,5 @@ services:
     # The container runs as uid 1000; ./data must be writable for that user,
     # or run it as another user:
     # user: "1000:1000"
-    # SIGTERM aborts a running GUI sequence: send GUI_COMMANDS_DISABLE via MQTT before a planned stop
+    # on SIGTERM the server restores values changed by a running GUI sequence first (up to 25 s)
     stop_grace_period: 30s
