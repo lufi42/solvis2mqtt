@@ -25,7 +25,9 @@ LABEL org.opencontainers.image.title="solvis2mqtt" \
 ENV JAVA_OPTS="-Xmx384m" \
     SOLVIS2MQTT_BASE_XML="/data/base.xml"
 
-RUN useradd --system --uid 1000 --home-dir /data --shell /usr/sbin/nologin solvis \
+# newer Ubuntu base images already ship a user with uid 1000 ("ubuntu"); replace it
+RUN if getent passwd 1000 >/dev/null; then userdel -r "$(getent passwd 1000 | cut -d: -f1)"; fi \
+    && useradd --system --uid 1000 --home-dir /data --shell /usr/sbin/nologin solvis \
     && mkdir -p /app /data \
     && chown solvis:solvis /data
 

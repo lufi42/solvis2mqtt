@@ -18,9 +18,9 @@ jobs:
     name: jar
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -38,7 +38,7 @@ jobs:
           java -jar solvis2mqtt.jar --base-xml="$PWD/smoke/base.xml" --channels_of_all_configurations --csvSemicolon
           test -f smoke/log/SolvisServerData/control.xml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: solvis2mqtt.jar
           path: solvis2mqtt.jar
@@ -63,7 +63,7 @@ jobs:
     name: image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-qemu-action@v3
 
