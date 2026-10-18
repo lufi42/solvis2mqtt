@@ -87,7 +87,7 @@ public class Constants {
 	 * On shutdown the server waits this long for a running GUI command to
 	 * restore its dependencies before the connections are aborted.
 	 */
-	public static final int SHUTDOWN_RESTORE_TIMEOUT_MS = 25000;
+	public static final int SHUTDOWN_RESTORE_TIMEOUT_MS = 50000;
 
 	public static final int MODBUS_SLAVE_ID = 1;
 

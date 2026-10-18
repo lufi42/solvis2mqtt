@@ -20,7 +20,8 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
                 Inhalt des Datenspeichers. Die offenen Rueckstellungen stehen in
                 SolvisServerData/pending-restore-<unitId>.properties; nach einem harten Abbruch werden
                 sie beim naechsten Start als Erstes nachgeholt. Bei SIGTERM/TERMINATE bricht der Server
-                den laufenden Befehl ab, fuehrt aber die Rueckstellung noch aus (max. 25 s).
+                den laufenden Befehl ab, fuehrt aber die Rueckstellung noch aus (max. 50 s, eine
+                Rueckstellung dauert etwa 20 s; stop_grace_period 60 s).
 
     18.10.2026  Entfernt: proprietaere TCP-Client-Schnittstelle (Ports 10735/10736, Argumente
                 --server-terminate und --server-restart), FHEM-Modul, Mail-Versand bei Anlagenfehlern
