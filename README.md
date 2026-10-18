@@ -193,20 +193,58 @@ aktiviert“ (`binary_sensor`).
 
 ## Umstieg vom SolvisSmartHomeServer
 
-Eine vorhandene `base.xml` läuft nach diesen Änderungen weiter; der konfigurierte `topicPrefix` bleibt, Topics
-und Entity-Ids ändern sich nicht:
+Eine bestehende Installation (Linux mit systemd oder Windows) lässt sich ohne neues Learning und ohne Änderung der
+MQTT-Topics und Home-Assistant-Entities auf solvis2mqtt umstellen. Der konfigurierte `topicPrefix` und die Unit-Id
+bleiben, auch wenn der Prefix noch `SolvisSmartHomeServer` heißt.
 
-* Attribut `port` am `ExecutionData`-Element entfernen.
+### 1. `base.xml` anpassen
+
+Kopie der bisherigen `base.xml` anlegen und darin:
+
+* Attribut `port` am `ExecutionData`-Element entfernen; `writablePathLinux` auf das neue Datenverzeichnis setzen
+  (im Container `/data`).
 * Elemente `ExceptionMail` und `Iobroker` entfernen.
 * Features `SendMailOnError` und `SendMailOnErrorsCleared` entfernen, `ClearErrorMessageAfterMail` heißt jetzt
   `ClearErrorMessage`.
 * `Mqtt` muss aktiviert sein (`enable="true"`).
-* Das Datenverzeichnis `SolvisServerData` mit den gelernten Bildern kann übernommen werden, dann ist kein neues
-  Learning nötig; bei geänderter `control.xml` meldet der Server das beim Start.
+
+Alles andere (Unit, Features, Extensions, verschlüsselte Passwörter) bleibt gültig; die Verschlüsselung ist zwischen
+den Versionen kompatibel. Die Datei wird beim Start gegen `base.xsd` geprüft, Fehler nennen Zeile und Attribut.
+
+### 2. Datenverzeichnis übernehmen
+
+Aus dem bisherigen `writablePath` das Verzeichnis `SolvisServerData` in das neue Datenverzeichnis kopieren, mit
+`LearnedImages`, `graficData.xml`, `control.xml`, `control.xsd`, `measurements.xml` und eventuellen
+`ha-groups.properties`/`ha-labels.properties`; die Logdateien `solvis-*.log*` können entfallen. Der Server prüft beim
+Start, ob die gelernten Daten zur eingebauten `control.xml` und zu den Features der `base.xml` passen; nur wenn
+nicht, lernt er neu (dauert einige Minuten, in der Zeit die SolvisRemote nicht bedienen). Ob ein Learning ansteht,
+zeigt vorab ein Lauf im Dokumentationsmodus, der die Daten nur liest:
+
+```sh
+docker run --rm -v ./data:/data ghcr.io/lufi42/solvis2mqtt --documentation --csvSemicolon
+```
+
+Im Container muss das Verzeichnis für UID 1000 schreibbar sein (`chown -R 1000:1000 data`).
+
+### 3. Umschalten
+
+Es darf immer nur ein Server die SolvisRemote steuern, und ein laufender GUI-Zugriff darf nicht unterbrochen werden:
+
+1. Am alten Server per MQTT `GUI_COMMANDS_DISABLE` auf `<topicPrefix>/<smartHomeId>/<unitId>/server/cmnd` senden
+   (z. B. aus Home Assistant mit `mqtt.publish`) und warten, bis `<unitId>/gui_access` nicht mehr
+   `CONTROL_WRITE_ONGOING` meldet.
+2. Alten Dienst stoppen und deaktivieren (`systemctl disable --now SolvisSmartHomeServer`), danach noch einmal die
+   aktuelle `measurements.xml` übernehmen (sie wird beim Beenden geschrieben und enthält Zählerstände).
+3. solvis2mqtt starten (`docker compose up -d`). Im Datei-Log `SolvisServerData/solvis-tiny.log.0` sollten
+   „Connection to MQTT successfull“, „Home Assistant MQTT discovery messages published“ und die ersten gelesenen
+   Kanäle erscheinen; in Home Assistant aktualisieren sich die bestehenden Entities, weil `unique_id` und Topics
+   gleich bleiben. Die GUI-Befehle sind nach dem Start automatisch wieder aktiv.
+4. Die alte Installation einige Tage als Rückfallebene behalten, aber nie parallel starten.
 
 Entfallen sind der TCP-Port, `--server-terminate` und `--server-restart` (Stoppen über SIGTERM bzw. den
 Dienst-Manager), FHEM-Modul, Mail-Versand, Windows-Task und der ioBroker-Generator. ioBroker und andere Systeme
-nutzen die MQTT-Topics direkt.
+nutzen die MQTT-Topics direkt. Als Ersatz für die Störungs-Mail stehen `<unitId>/status` = `ERROR` und die
+Störungskanäle zur Verfügung, die Benachrichtigung übernimmt das Smart-Home-System.
 
 ## Entwicklung
 
