@@ -4,7 +4,7 @@
 	<property environment="env" />
 	<property name="innoSetup" value="${env.INNO_SETUP}/compil32" />
 	<property name="iss.dir" value="SmartHome\Windows" />
-	<property name="iss" location="${iss.dir}/SolvisSmartHomeServer.iss" />
+	<property name="iss" location="${iss.dir}/solvis2mqtt.iss" />
 	<property name="debuglevel" value="source,lines,vars" />
 	<property name="target" value="1.8" />
 	<property name="source" value="1.8" />
@@ -17,12 +17,12 @@
 	<property name="changes" value="docu/CHANGES.txt" />
 	<property name="fhem.pm" value="SmartHome/FHEM/73_SolvisClient.pm" />
 	<property name="makefile" value="SmartHome/Linux/Makefile" />
-	<property name="linux.systemd" value="SmartHome/Linux/SolvisSmartHomeServer.service" />
-	<property name="linux.systemdD" value="SmartHome/Linux/DebugSolvisSmartHomeServer.service" />
+	<property name="linux.systemd" value="SmartHome/Linux/solvis2mqtt.service" />
+	<property name="linux.systemdD" value="SmartHome/Linux/solvis2mqtt-debug.service" />
 	<property name="pubBaseDir" value="${build.dir}/de/sgollmer/solvismax/data" />
 	<property name="myBase.xml" location="${env.SOLVIS_SMART_HOME_SERVER_BASE_XML}" />
 	<property name="lib.dir" value="lib" />
-	<property name="dist.base" value="SolvisSmartHomeServer" />
+	<property name="dist.base" value="solvis2mqtt" />
 	<property name="tinyLogVersion" value="2.4.1" />
 	
 	<loadfile srcfile="src/de/sgollmer/solvismax/Version.java" property="version">
@@ -142,7 +142,7 @@
 		<fixcrlf file="${makefile}" destdir="${pubLinux.dir}" eol="lf" />
 		<fixcrlf file="${changes}" destdir="${pubLinux.dir}" eol="lf" />
 		<copy file="${pubBaseDir}/base.xml" tofile="${pubLinux.dir}/base.xml.new" />
-		<zip destfile="${zip.dir}/SolvisSmartHomeServer linux ${version}.zip" basedir="${pubLinux.dir}" />
+		<zip destfile="${zip.dir}/solvis2mqtt linux ${version}.zip" basedir="${pubLinux.dir}" />
 
 
 		<exec executable="${innoSetup}" dir="${iss.dir}">
@@ -156,7 +156,7 @@
 		<copy todir="${pubWindows.dir}/FHEM">
 			<fileset file="${fhem.pm}" casesensitive="yes" />
 		</copy>
-		<zip destfile="${zip.dir}/SolvisSmartHomeServer windows ${version}.zip" basedir="${pubWindows.dir}" />
+		<zip destfile="${zip.dir}/solvis2mqtt windows ${version}.zip" basedir="${pubWindows.dir}" />
 	</target>
 	<target name="clean">
 		<delete dir="${build.dir}" />

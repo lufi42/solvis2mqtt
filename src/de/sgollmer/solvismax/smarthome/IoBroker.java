@@ -247,7 +247,7 @@ public class IoBroker {
 		writer.append("        return;\n");
 		writer.append("    }\n\n");
 
-		writer.append("    // Beim Starten dem SolvisSmartHomeServer mitteilen, dass ioBroker online ist:\n");
+		writer.append("    // Beim Starten dem solvis2mqtt mitteilen, dass ioBroker online ist:\n");
 		writer.append("    setState('");
 		writer.append(onlinePathWInterface);
 
@@ -287,7 +287,7 @@ public class IoBroker {
 				+ " 1 : (obj.state.val === false ? 0 : obj.state.val)) : ''), false);\n");
 		writer.append("        });\n\n");
 
-		writer.append("        // Beim Beenden dem SolvisSmartHomeServer mitteilen, dass ioBroker offline ist\n");
+		writer.append("        // Beim Beenden dem solvis2mqtt mitteilen, dass ioBroker offline ist\n");
 		writer.append("        onStop (function(){\n");
 		writer.append("            setState('");
 		writer.append(onlinePathWInterface);

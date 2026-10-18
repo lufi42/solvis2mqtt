@@ -53,10 +53,10 @@ goto start_%1
 
 :continue
 	if %out% GTR 0 (
-		%java% -jar SolvisSmartHomeServer.jar %paras% > %file%
+		%java% -jar solvis2mqtt.jar %paras% > %file%
 		echo Die Datei %file% wurde geschrieben.
 	) else (
-		%java% -jar SolvisSmartHomeServer.jar %paras%
+		%java% -jar solvis2mqtt.jar %paras%
 	)
 
 	%pause%

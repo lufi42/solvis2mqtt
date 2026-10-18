@@ -104,7 +104,7 @@ public class CommandHandler {
 					this.debugChannel(receivedData, client);
 					break;
 				default:
-					logger.warn("Command <" + command.name() + ">unknown, old version of SolvisSmartHomeServer?");
+					logger.warn("Command <" + command.name() + ">unknown, old version of solvis2mqtt?");
 					break;
 			}
 			return abortConnection;

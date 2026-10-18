@@ -1641,7 +1641,7 @@ sub DbLog_splitFn {
                     Ein g&uuml;ltiger Wert.<BR/></td></tr>
           </table><BR/>
         </ul><BR/>
-        Will man das Gespann FHEM/SolvisSmartHomeServer in ganz bestimmten Situationen testen, sind diese mit der Solvis-Anlage nicht immer zu erreichen bzw. k&ouml;nnte zu einer unn&ouml;tigen Energieverschwendung.
+        Will man das Gespann FHEM/solvis2mqtt in ganz bestimmten Situationen testen, sind diese mit der Solvis-Anlage nicht immer zu erreichen bzw. k&ouml;nnte zu einer unn&ouml;tigen Energieverschwendung.
         f&uuml;hren. Für diese Debugging-Zwecke wurde daher der Befehl <code>DebugChannel</code> eingeführt. Er besitzt 2 mögliche Formate:
         <BR/><BR/>
         <ol><code>
@@ -1788,7 +1788,7 @@ sub DbLog_splitFn {
               <ul>
                 <table>
                     <tr><td align="right" valign="top"><code>SolvisName</code> : </td><td align="left" valign="top">Name der Id der Unit des Servers (in base.xml definiert). Wenn das Attribut nicht definiert ist, muss der FHEM-Gerätename identisch mit der Id der Unit des base.xml des Servers sein.</td></tr>
-                    <tr><td align="right" valign="top"><code>GuiCommandsEnabled</code> : </td><td align="left" valign="top">TRUE/FALSE: Gui-Befehle sind enabled/disabled. Im Service-Fall empfiehlt es sich dieses Atrribut auf FALSE zu setzen, damit der Service nicht von dem SolvisSmartHomeServer irritiert wird. Default: TRUE</td></tr>
+                    <tr><td align="right" valign="top"><code>GuiCommandsEnabled</code> : </td><td align="left" valign="top">TRUE/FALSE: Gui-Befehle sind enabled/disabled. Im Service-Fall empfiehlt es sich dieses Atrribut auf FALSE zu setzen, damit der Service nicht von dem solvis2mqtt irritiert wird. Default: TRUE</td></tr>
                 </table>
               </ul>
             </ul><BR/>
@@ -2034,7 +2034,7 @@ sub DbLog_splitFn {
                     A valid value.<BR/></td></tr>
           </table><BR/>
         </ul><BR/>
-        If you want to test the FHEM / SolvisSmartHomeServer combination in very specific situations, these cannot always be reached with the Solvis system or could lead to unnecessary waste of energy. The <code>DebugChannel</code> command was therefore introduced for these debugging purposes. It has 2 possible formats:
+        If you want to test the FHEM / solvis2mqtt combination in very specific situations, these cannot always be reached with the Solvis system or could lead to unnecessary waste of energy. The <code>DebugChannel</code> command was therefore introduced for these debugging purposes. It has 2 possible formats:
         f&uuml;hren. Für diese Debugging-Zwecke wurde daher der Befehl <code>DebugChannel</code> eingeführt. Er besitzt 2 mögliche Formate:
         <BR/><BR/>
         <ol><code>
@@ -2176,7 +2176,7 @@ sub DbLog_splitFn {
               <ul>
                 <table>
                     <tr><td align="right" valign="top"><code>SolvisName</code> : </td><td align="left" valign="top">Name of the id of the server unit (defined in base.xml). If the attribute is not defined, the FHEM device name must be identical to the ID of the unit of the base.xml of the server.</td></tr>
-                    <tr><td align="right" valign="top"><code>GuiCommandsEnabled</code> : </td><td align="left" valign="top">TRUE / FALSE: Gui commands are enabled / disabled. In the case of service, it is recommended to set this attribute to FALSE so that the service is not irritated by the SolvisSmartHomeServer. Default: TRUE</td></tr>
+                    <tr><td align="right" valign="top"><code>GuiCommandsEnabled</code> : </td><td align="left" valign="top">TRUE / FALSE: Gui commands are enabled / disabled. In the case of service, it is recommended to set this attribute to FALSE so that the service is not irritated by the solvis2mqtt. Default: TRUE</td></tr>
                 </table>
               </ul>
             </ul><BR/>

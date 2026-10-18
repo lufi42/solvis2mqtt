@@ -1,6 +1,6 @@
 A E N D E R U N G E N
 
-Nach Version 01.07.00 (Fork lufi42, unveroeffentlicht)
+Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt)
 
     16.10.2026  Home Assistant: Entities einer Unit werden nach dem Solvis-Anlagenschema auf
                 Geraete verteilt (Speicher, Solaranlage, Warmwasser, Heizkreis 1-3,
@@ -12,6 +12,13 @@ Nach Version 01.07.00 (Fork lufi42, unveroeffentlicht)
 
     17.10.2026  HA-Discovery wird bei jedem (Re-)Connect zum Broker und auf die Birth-Nachricht von
                 Home Assistant (<prefix>/status = online) erneut veroeffentlicht.
+
+    18.10.2026  Umbenennung in solvis2mqtt, Versionierung nach Semantic Versioning ab 1.0.0.
+                Neue Namen: solvis2mqtt.jar, Dienst solvis2mqtt.service (Debug: solvis2mqtt-debug.service),
+                Installationsverzeichnis /opt/solvis/solvis2mqtt, Windows-Task solvis2mqttTask. Die
+                mitgelieferte base.xml verwendet topicPrefix/idPrefix "solvis2mqtt"; bestehende base.xml
+                behalten ihren konfigurierten Prefix. Unveraendert: Java-Package de.sgollmer.solvismax,
+                Datenverzeichnis SolvisServerData, Format-Versionen der Schnittstellen.
 
 Version 01.07.00 (Fork lufi42, https://github.com/lufi42/SolvisSmartHomeServer)
 

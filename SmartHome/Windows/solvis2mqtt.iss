@@ -2,11 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyBaseDir       "..\..\publish Linux"
-#define MyAppName       "SolvisSmartHomeServer"
-#define MyInstallerName "SolvisSmartHomeServer setup"
-#define MyAppVersion    "1.1.0"
+#define MyAppName       "solvis2mqtt"
+#define MyInstallerName "solvis2mqtt setup"
+#define MyAppVersion    "1.0.0"
 #define MyAppExeName    "Startup.bat"
-#define MyJarFile       "SolvisSmartHomeServer.jar"
+#define MyJarFile       "solvis2mqtt.jar"
 #define MyIconName      "Solvis.ico"
 #define MyWindowsDir    "..\..\SmartHome\Windows"
 
@@ -43,7 +43,7 @@ Source: "Startup.bat"; DestDir: "{app}"; Flags: ignoreversion;
 Source: "{#MyBaseDir}\base.xml.new"; DestDir: "{app}"; Flags: ignoreversion;
 Source: "{#MyBaseDir}\base.xsd"; DestDir: "{app}"; Flags: ignoreversion;
 Source: "{#MyBaseDir}\CHANGES.txt"; DestDir: "{app}"; Flags: ignoreversion;
-Source: "{#MyBaseDir}\SolvisSmartHomeServer.jar"; DestDir: "{app}"; Flags: ignoreversion;
+Source: "{#MyBaseDir}\solvis2mqtt.jar"; DestDir: "{app}"; Flags: ignoreversion;
 Source: "{#MyWindowsDir}\{#MyIconName}"; DestDir: "{app}"; Flags: ignoreversion;
 ; NOTE: Don't use "Flags: gnoreversion" on any shared system files
 
@@ -67,12 +67,12 @@ Name: "{group}\Uninstall {#MyAppName}}"; Filename: "{uninstallexe}"
 [Run]
 Filename: "java"; Description: "Create schedule task"; Parameters: "-jar ""{app}\{#MyJarFile}"" --create-task-xml=""{app}\Task.xml"" --onBoot"; WorkingDir: "{app}"; Tasks: run\OnWindowsStart;
 Filename: "java"; Description: "Create schedule task"; Parameters: "-jar ""{app}\{#MyJarFile}"" --create-task-xml=""{app}\Task.xml"""; WorkingDir: "{app}"; Tasks: run\OnLogon;
-Filename: "schtasks"; Description: "Schedule on booting"; Parameters: "/create /xml ""{app}\Task.xml"" /tn SolvisSmartHomeServerTask /f"; Tasks: run; 
-;Filename: "schtasks"; Description: "Schedule on booting"; Parameters: "/create /sc ONLOGON /tn SolvisSmartHomeServerTask /tr ""{app}\Startup.bat"" /f"; Tasks: runOnWindowsStart
+Filename: "schtasks"; Description: "Schedule on booting"; Parameters: "/create /xml ""{app}\Task.xml"" /tn solvis2mqttTask /f"; Tasks: run; 
+;Filename: "schtasks"; Description: "Schedule on booting"; Parameters: "/create /sc ONLOGON /tn solvis2mqttTask /tr ""{app}\Startup.bat"" /f"; Tasks: runOnWindowsStart
 ;Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: shellexec postinstall skipifsilent
 
 [UninstallRun]
-Filename: "schtasks"; Parameters: "/delete /tn SolvisSmartHomeServerTask /f"; RunOnceId: "SolvisScheduler";
+Filename: "schtasks"; Parameters: "/delete /tn solvis2mqttTask /f"; RunOnceId: "SolvisScheduler";
 
 [UninstallDelete]
 Type: files; Name: "{app}\Task.xml"

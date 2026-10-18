@@ -21,14 +21,14 @@ public class Task {
 	private static String ENCODING = "UTF-16LE";
 	private static String VERSION = "1.0";
 	private static String NAMESPACE = "http://schemas.microsoft.com/windows/2004/02/mit/task";
-	private static String JAR = "SolvisSmartHomeServer.jar";
+	private static String JAR = "solvis2mqtt.jar";
 
 //	<?xml version="1.0" encoding="UTF-16"?>
 //	<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
 //		<RegistrationInfo>
 //			<Author>Stefan Gollmer</Author>
-//			<Description>Starts the SolvisSmartHomeServer</Description>
-//			<URI>\SolvisSmartHomeServerTask</URI>
+//			<Description>Starts solvis2mqtt</Description>
+//			<URI>\solvis2mqttTask</URI>
 //		</RegistrationInfo>
 //		<Triggers>
 //			<BootTrigger>
@@ -64,7 +64,7 @@ public class Task {
 //		<Actions Context="Author">
 //			<Exec>
 //				<Command>javaw</Command>
-//				<Arguments>-jar "C:\JavaPgms\SolvisSmartHomeServer\SolvisSmartHomeServer.jar"</Arguments>
+//				<Arguments>-jar "C:\JavaPgms\solvis2mqtt\solvis2mqtt.jar"</Arguments>
 //			</Exec>
 //		</Actions>
 //	</Task>
@@ -104,12 +104,12 @@ public class Task {
 				writer.writeEndElement();
 				writer.writeStartElement("Description");
 				{
-					writer.writeCharacters("Starts the SolvisSmartHomeServer");
+					writer.writeCharacters("Starts solvis2mqtt");
 				}
 				writer.writeEndElement();
 				writer.writeStartElement("URI");
 				{
-					writer.writeCharacters("\\SolvisSmartHomeServerTask");
+					writer.writeCharacters("\\solvis2mqttTask");
 				}
 				writer.writeEndElement();
 			}

@@ -11,7 +11,7 @@
 	<property name="source" value="1.8" />
 	<property name="dist.dir" value="dist" />
 	<property name="lib.dir" value="lib" />
-	<property name="dist.base" value="SolvisSmartHomeServer" />
+	<property name="dist.base" value="solvis2mqtt" />
 	<path id="SolvisMax.classpath">
 		<pathelement location="bin" />
 		<pathelement location="lib/log4j-1.2-api-2.25.4.jar" />
