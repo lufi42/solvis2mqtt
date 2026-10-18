@@ -61,6 +61,12 @@ public class CommandControl extends Command {
 	private final Integer monitoringPriority;
 
 	private Map<ChannelDescription, Dependency> toRestore = new HashMap<>(3);
+	/** original values of the channels in toRestore, captured before they were changed */
+	private Map<ChannelDescription, SingleData<?>> restoreValues = new HashMap<>(3);
+	/** shutdown: skip everything except the restore of already changed dependencies */
+	private volatile boolean restoreOnly = false;
+	/** this command restores a value left over from an interrupted previous run */
+	private boolean pendingRestore = false;
 
 	private MySet dependencyGroupsToExecute = new MySet();
 	private List<Dependency> dependenciesToExecute = null;
@@ -177,6 +183,47 @@ public class CommandControl extends Command {
 	}
 
 	/**
+	 * Shutdown requested: the command finishes as fast as possible, only the
+	 * dependencies changed so far are restored.
+	 */
+	public synchronized void requestRestoreOnly() {
+		this.restoreOnly = true;
+		this.mustBeFinished = true;
+	}
+
+	public synchronized boolean hasPendingRestore() {
+		return !this.toRestore.isEmpty();
+	}
+
+	/**
+	 * Marks the command as restore of a value left over from a previous run; it
+	 * is executed first and removed from the pending restore file when written.
+	 */
+	void markPendingRestore() {
+		this.pendingRestore = true;
+	}
+
+	@Override
+	public boolean first() {
+		return this.pendingRestore;
+	}
+
+	private void addToRestore(final ChannelDescription channel, final Dependency dependency,
+			final SingleData<?> original) {
+		this.toRestore.put(channel, dependency);
+		if (original != null && !this.restoreValues.containsKey(channel)) {
+			this.restoreValues.put(channel, original);
+			this.solvis.getPendingRestore().put(channel, original);
+		}
+	}
+
+	private void restored(final ChannelDescription channel) {
+		this.toRestore.remove(channel);
+		this.restoreValues.remove(channel);
+		this.solvis.getPendingRestore().remove(channel);
+	}
+
+	/**
 	 * 
 	 * @param solvis
 	 * @param description
@@ -210,6 +257,10 @@ public class CommandControl extends Command {
 				if (overwrite) {
 					data.setSingleData(setResult);
 					this.setValue = null;
+					if (this.pendingRestore) {
+						logger.info("Channel <" + description.getId() + "> restored after interrupted previous run.");
+						solvis.getPendingRestore().remove(description);
+					}
 				}
 				return ResultStatus.SUCCESS;
 			} else {
@@ -408,6 +459,9 @@ public class CommandControl extends Command {
 
 		@Override
 		public State next(final CommandControl command) {
+			if (command.restoreOnly) {
+				return StateEnum.RESTORE_DEPENDENCY.getState();
+			}
 			return StateEnum.STANDBY_REQUEST.getState();
 		}
 
@@ -444,12 +498,19 @@ public class CommandControl extends Command {
 
 		@Override
 		public State next(final CommandControl command) {
+			if (command.restoreOnly) {
+				return StateEnum.RESTORE_DEPENDENCY.getState();
+			}
 			return StateEnum.EXECUTE_DEPENDENCY.getState();
 		}
 
 		@Override
 		public ResultStatus execute(final CommandControl command) throws IOException, TerminationException,
 				NumberFormatException, PowerOnException, XmlException, TypeException, SolvisErrorException {
+
+			if (command.restoreOnly) {
+				return ResultStatus.CONTINUE;
+			}
 
 			Map<String, SingleData<?>> map = new HashMap<>(3);
 
@@ -483,6 +544,10 @@ public class CommandControl extends Command {
 
 		@Override
 		public State next(final CommandControl command) {
+			if (command.restoreOnly) {
+				command.dependenciesToExecute = null;
+				return StateEnum.RESTORE_DEPENDENCY.getState();
+			}
 			if (command.dependenciesToExecute.isEmpty()) {
 				command.dependenciesToExecute = null;
 				return StateEnum.WRITING.getState();
@@ -494,6 +559,10 @@ public class CommandControl extends Command {
 		@Override
 		public ResultStatus execute(final CommandControl command) throws IOException, TerminationException,
 				NumberFormatException, PowerOnException, TypeException, SolvisErrorException {
+
+			if (command.restoreOnly) {
+				return ResultStatus.CONTINUE;
+			}
 
 			if (command.dependenciesToExecute == null) {
 				command.currentDependencyGroup = command.dependencyGroupsToExecute.iterator().next();
@@ -523,7 +592,7 @@ public class CommandControl extends Command {
 			SingleData<?> now = command.dependencyCache.get(dependencyChannel);
 
 			if (data == null) {
-				command.toRestore.put(dependencyChannel, dependency);
+				command.addToRestore(dependencyChannel, dependency, solvisData.getSingleData());
 				data = solvisData.getSingleData();
 				it.remove();
 				return ResultStatus.SUCCESS;
@@ -546,14 +615,14 @@ public class CommandControl extends Command {
 					command.mustBeFinished |= solvis.setStandby(standbyId);
 				}
 
-				command.toRestore.put(dependencyChannel, dependency);
+				command.addToRestore(dependencyChannel, dependency, solvisData.getSingleData());
 
 				status = command.write(solvis, dependencyChannel, data, command.dependencyFailCount, false);
 
 				command.dependencyCache.put(dependencyChannel, data);
 
 				if (data.equals(solvisData.getSingleData())) {
-					command.toRestore.remove(dependencyChannel);
+					command.restored(dependencyChannel);
 				}
 
 				if (status == ResultStatus.VALUE_VIOLATION) {
@@ -575,6 +644,9 @@ public class CommandControl extends Command {
 
 		@Override
 		public State next(final CommandControl command) {
+			if (command.restoreOnly) {
+				return StateEnum.RESTORE_DEPENDENCY.getState();
+			}
 			if (command.isInhibitRead()) {
 				return StateEnum.RESTORE_DEPENDENCY.getState();
 			} else {
@@ -586,6 +658,10 @@ public class CommandControl extends Command {
 		public ResultStatus execute(final CommandControl command)
 				throws IOException, TerminationException, TypeException, SolvisErrorException {
 			if (command.setValue == null) {
+				return ResultStatus.CONTINUE;
+			}
+			if (command.restoreOnly) {
+				logger.warn("Shutdown: write of channel <" + command.description.getId() + "> skipped.");
 				return ResultStatus.CONTINUE;
 			}
 
@@ -611,6 +687,10 @@ public class CommandControl extends Command {
 		@Override
 		public ResultStatus execute(final CommandControl command) throws NumberFormatException, IOException,
 				PowerOnException, TerminationException, TypeException, SolvisErrorException {
+
+			if (command.restoreOnly) {
+				return ResultStatus.CONTINUE;
+			}
 
 			Solvis solvis = command.solvis;
 
@@ -667,6 +747,9 @@ public class CommandControl extends Command {
 		@Override
 		public State next(final CommandControl command) {
 
+			if (command.restoreOnly) {
+				command.dependencyGroupsToExecute.clear();
+			}
 			if (!command.dependencyGroupsToExecute.isEmpty()) {
 				return StateEnum.EXECUTE_DEPENDENCY.getState();
 			} else if (!command.toRestore.isEmpty()) {
@@ -680,7 +763,9 @@ public class CommandControl extends Command {
 		public ResultStatus execute(final CommandControl command) throws IOException, TerminationException,
 				NumberFormatException, PowerOnException, TypeException, SolvisErrorException {
 
-			if (command.currentDependencyGroup != null) {
+			if (command.restoreOnly) {
+				command.dependencyGroupsToExecute.clear();
+			} else if (command.currentDependencyGroup != null) {
 				command.dependencyGroupsToExecute.remove(command.currentDependencyGroup);
 			}
 
@@ -708,13 +793,18 @@ public class CommandControl extends Command {
 				}
 			}
 
-			SingleData<?> data = solvis.getAllSolvisData().get(description).getSingleData();
+			// the value captured before the dependency was changed, not the current
+			// content of the data store (it may have been overwritten meanwhile)
+			SingleData<?> data = command.restoreValues.get(description);
+			if (data == null) {
+				data = solvis.getAllSolvisData().get(description).getSingleData();
+			}
 
 			ResultStatus status = command.write(solvis, description, data, command.dependencyFailCount, false);
 			command.dependencyCache.put(description, data);
 
 			if (status == ResultStatus.SUCCESS) {
-				command.toRestore.remove(description);
+				command.restored(description);
 			}
 			return status;
 		}
@@ -775,6 +865,10 @@ public class CommandControl extends Command {
 
 		public boolean isEmpty() {
 			return this.list.isEmpty();
+		}
+
+		public void clear() {
+			this.list.clear();
 		}
 
 		public Iterator<DependencyGroup> iterator() {

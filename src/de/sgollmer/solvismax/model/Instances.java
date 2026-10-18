@@ -234,6 +234,17 @@ public class Instances {
 		return this.solvisDescription;
 	}
 
+	/**
+	 * Shutdown: running GUI commands restore their dependencies first, at most
+	 * until the deadline.
+	 */
+	public void terminateGracefully(final long timeout_ms) {
+		long deadline = System.currentTimeMillis() + timeout_ms;
+		for (Solvis unit : this.units) {
+			unit.terminateGracefully(deadline);
+		}
+	}
+
 	public void abort() {
 		for (Solvis unit : this.units) {
 			unit.abort();

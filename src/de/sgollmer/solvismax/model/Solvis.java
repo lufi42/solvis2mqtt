@@ -58,6 +58,7 @@ import de.sgollmer.solvismax.model.objects.ErrorState;
 import de.sgollmer.solvismax.model.objects.Observer;
 import de.sgollmer.solvismax.model.objects.Observer.IObserver;
 import de.sgollmer.solvismax.model.objects.Observer.Observable;
+import de.sgollmer.solvismax.model.command.PendingRestore;
 import de.sgollmer.solvismax.model.objects.ScreenRestore;
 import de.sgollmer.solvismax.model.objects.SolvisDescription;
 import de.sgollmer.solvismax.model.objects.Standby;
@@ -94,6 +95,7 @@ public class Solvis {
 	private int learningPictureIndex = 0;
 
 	private SolvisWorkers worker;
+	private PendingRestore pendingRestore = null;
 
 	private boolean controlEnabled = true;
 
@@ -337,6 +339,7 @@ public class Solvis {
 		this.standby = this.getSolvisDescription().getStandby().instantiate(this);
 		SystemBackup oldMeasurements = this.backupHandler.getSystemBackup(this.unit.getId());
 		this.worker.init();
+		this.pendingRestore = new PendingRestore(this);
 		this.getUnit().getChannelOptions().initialize(this);
 		this.getAllSolvisData().restoreFromBackup(oldMeasurements);
 		this.getUnit().getChannelOptions().setFixValues(this);
@@ -346,6 +349,7 @@ public class Solvis {
 
 	void start() {
 		this.worker.start();
+		this.pendingRestore.queueRestores();
 		this.getDistributor().register();
 		UpdateControlAfterPowerOn updateControlAfterPowerOn = new UpdateControlAfterPowerOn();
 		this.solvisState.register(updateControlAfterPowerOn);
@@ -702,6 +706,17 @@ public class Solvis {
 
 	public void registerAbortObserver(final IObserver<Boolean> observer) {
 		this.abortObservable.register(observer);
+	}
+
+	public PendingRestore getPendingRestore() {
+		return this.pendingRestore;
+	}
+
+	/**
+	 * Shutdown: let a running GUI command restore its dependencies first.
+	 */
+	public boolean terminateGracefully(final long deadline) {
+		return this.worker.terminateGracefully(deadline);
 	}
 
 	public void abort() {
