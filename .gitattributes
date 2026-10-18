@@ -1,0 +1,6 @@
+# Shell scripts and Docker files must stay LF, also on Windows checkouts
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+docker/** text eol=lf
+.github/** text eol=lf

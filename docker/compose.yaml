@@ -1,0 +1,25 @@
+# Example Docker Compose file for solvis2mqtt.
+#
+# 1. mkdir data; put base.xml into it (template: docker run --rm --entrypoint cat
+#    ghcr.io/lufi42/solvis2mqtt /app/base.xml.new > data/base.xml) and set
+#    writablePathLinux="/data" as well as the Solvis and MQTT access data.
+# 2. Encrypt passwords:  docker compose run --rm solvis2mqtt --string-to-crypt=secret
+# 3. Learning (once, and after every change of control.xml):
+#                        docker compose run --rm solvis2mqtt --server-learn
+# 4. docker compose up -d
+services:
+  solvis2mqtt:
+    image: ghcr.io/lufi42/solvis2mqtt:latest
+    container_name: solvis2mqtt
+    restart: unless-stopped
+    volumes:
+      - ./data:/data          # base.xml + SolvisServerData (learned images, backups, logs)
+    environment:
+      JAVA_OPTS: -Xmx384m     # learning needs ~300 MB heap
+    # The container runs as uid 1000; ./data must be writable for that user,
+    # or run it as another user:
+    # user: "1000:1000"
+    stop_grace_period: 30s    # the server finishes a running GUI sequence on SIGTERM
+    # ports:
+    #   - "10735:10735"       # only for the TCP client interface (FHEM module)
+    #   - "10736:10736"

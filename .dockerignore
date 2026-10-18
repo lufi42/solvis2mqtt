@@ -1,0 +1,7 @@
+# Only what the build stage needs goes into the build context
+*
+!lib/*.jar
+!rsc/
+!src/
+!scripts/build-jar.sh
+!docker/entrypoint.sh

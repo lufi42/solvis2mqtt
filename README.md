@@ -255,5 +255,32 @@ Nacht, Tag etc.) wird hierbei vom Screen gelesen und gemerkt.
 
 Die genaue Vorgehensweise muss man aus der folgenden Dokumentation entnommen werden:
 
+### Docker
+
+Fertige Images gibt es auf `ghcr.io/lufi42/solvis2mqtt` (`latest` = letztes Release, `1.x`, `main`; linux/amd64 und
+linux/arm64, also auch Raspberry Pi 3/4/5 mit 64-Bit-System). Das Image enthält nur Java und das Jar; `base.xml` und das
+Datenverzeichnis `SolvisServerData` liegen auf einem Volume unter `/data`.
+
+```sh
+mkdir data
+docker run --rm --entrypoint cat ghcr.io/lufi42/solvis2mqtt /app/base.xml.new > data/base.xml
+# data/base.xml anpassen: writablePathLinux="/data", Solvis-Zugang, MQTT-Broker.
+# Passwörter verschlüsseln:
+docker run --rm ghcr.io/lufi42/solvis2mqtt --string-to-crypt=geheim
+# Learning (einmalig und nach jeder Änderung der control.xml):
+docker run --rm -v ./data:/data ghcr.io/lufi42/solvis2mqtt --server-learn
+# Betrieb:
+docker run -d --name solvis2mqtt --restart unless-stopped -v ./data:/data ghcr.io/lufi42/solvis2mqtt
+```
+
+Alle Argumente hinter dem Image-Namen gehen an den Server. Der Container läuft als Benutzer mit UID 1000, das Verzeichnis
+`data` muss für diesen schreibbar sein (oder `--user` setzen). Die Heap-Größe steht in `JAVA_OPTS` (Default `-Xmx384m`,
+das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM und beendet eine laufende GUI-Sequenz, daher
+`--stop-timeout 30` bzw. `stop_grace_period` setzen. Ein Beispiel für Docker Compose liegt in
+[docker/compose.yaml](docker/compose.yaml). Die TCP-Ports 10735/10736 werden nur für das FHEM-Modul gebraucht.
+
+Selbst bauen: `docker build -t solvis2mqtt .` oder ohne Docker `scripts/build-jar.sh` (JDK 8 oder neuer, kein Ant/Maven
+nötig). GitHub Actions baut bei jedem Push das Jar, hängt bei Tags `v*` das Linux-Zip an das Release und veröffentlicht
+das Image.
 ## Ausführliche Dokumentation
 Eine umfangreiche Dokumentation der Installation, Interfaces, Arbeitsweise etc. findet sich [in der Wiki](https://github.com/GollmerSt/SolvisSmartHomeServer/wiki).
