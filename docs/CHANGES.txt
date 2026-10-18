@@ -5,6 +5,11 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
     Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
     Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
+    18.10.2026  Veraltete retained data/meta-Topics (Issue #17): Nach dem ersten Verbindungsaufbau prueft
+                der Server einmalig alle retained Kanal-Topics seiner Units auf dem Broker und loescht
+                die, deren Kanal es in der aktuellen Konfiguration nicht mehr gibt (z. B. nach einer
+                Umbenennung durch mainHeating="Pellet"). Topics fremder Units bleiben unangetastet.
+
     18.10.2026  Rueckstellung von Abhaengigkeiten (Issue #16): Beim Lesen mancher Kanaele verstellt der
                 Server voruebergehend einen anderen Kanal (z. B. C12 fuer C13/C14). Der Originalwert wird
                 jetzt beim Verstellen gemerkt und exakt dieser zurueckgeschrieben, nicht der aktuelle
