@@ -1,9 +1,16 @@
-# SolvisSmartHomeServer
+# solvis2mqtt
 
-> **Fork-Hinweis (lufi42):** Dieser Fork führt den SolvisSmartHomeServer von GollmerSt weiter. Version 01.07.00 enthält
-> die Korrekturen aus den Upstream-Issues #12 (Home-Assistant-Discovery) und #14 (Kanäle bei zwei Heizkreisen) sowie die
-> Konfiguration für SolvisMax mit SolvisLino. Die Weiterentwicklung wird unter einem eigenen Projektnamen fortgesetzt;
-> Fehler und Wünsche bitte als [Issue in diesem Fork](https://github.com/lufi42/SolvisSmartHomeServer/issues).
+solvis2mqtt bindet Solvis-Heizungsanlagen (SolvisMax 6/7 mit SolvisControl 2 und SolvisRemote) per MQTT an
+Smart-Home-Systeme an, insbesondere an Home Assistant über MQTT Auto-Discovery. Messwerte werden gelesen,
+Sollwerte und Betriebsarten über die Web-Oberfläche der SolvisRemote gesetzt.
+
+> **Herkunft:** solvis2mqtt führt den [SolvisSmartHomeServer](https://github.com/GollmerSt/SolvisSmartHomeServer)
+> von Stefan Gollmer (GollmerSt) weiter, Basis ist Upstream 01.06.00. Version 1.0.0 ist funktional identisch mit dem
+> letzten Fork-Release 01.07.00 zuzüglich der Home-Assistant-Geräte und des Discovery-Republish; neu sind nur der Name
+> und Semantic Versioning. Bestehende Installationen laufen mit ihrer `base.xml` unverändert weiter, der dort
+> konfigurierte `topicPrefix` bleibt. Geändert haben sich die Namen von Jar (`solvis2mqtt.jar`), Dienst
+> (`solvis2mqtt.service`) und Installationsverzeichnis (`/opt/solvis/solvis2mqtt`). Fehler und Wünsche bitte als
+> [Issue](https://github.com/lufi42/solvis2mqtt/issues).
 
 ## Überblick
 
@@ -14,7 +21,7 @@ Es eignet sich nicht für die neueren Anlagen der SolvisMax7 und SolvisBen, welc
 Dieses Programm ist ein eigenständiges Java-Programm, das als Service/Task/Daemon im Hintergrund läuft. Ziel war nicht nur ein Monitoring der Anlage zu ermöglichen sondern auch die Einstellung der wichtigsten Anlageparameter wie z. B. Soll-Temperaturen, Raumabhängigkeit, Anlagemodus.
 
 Die bisher mir bekannten Lösungen liefern nur die Messwerte/Zustände einer Solvis-Anlagen an die SmartHome-Systeme. Dabei wird ein XML-String interpretiert,
-der über das WebInterface der SolvisRemote abgefragt wird. Der SolvisSmartHomeServer nutzt ebenfalls diese Schnittstelle.
+der über das WebInterface der SolvisRemote abgefragt wird. solvis2mqtt nutzt ebenfalls diese Schnittstelle.
 Eine Steuerung der Anlage mit dieser Schnittstelle ist jedoch nicht möglich.
 
 Erst bei neueren Anlagen (von der Solvis-Control-2-Zentralreglerversion MA205 an) hat die Firma Solvis die Steuermöglichkeit über das Modbus-Interface realisiert. Ältere Anlagen bleiben dabei außen vor.
@@ -96,8 +103,8 @@ In der `base.xml` das Attribut `haDiscoveryPrefix` zum `Mqtt`-Element hinzufüge
 <tns:Mqtt enable="true"
     brokerUrl="192.168.0.x" port="1883"
     subscribeQoS="1" publishQoS="1"
-    idPrefix="SolvisSmartHomeServer"
-    topicPrefix="SolvisSmartHomeServer"
+    idPrefix="solvis2mqtt"
+    topicPrefix="solvis2mqtt"
     smartHomeId="HomeAssistant"
     haDiscoveryPrefix="homeassistant" />
 ```

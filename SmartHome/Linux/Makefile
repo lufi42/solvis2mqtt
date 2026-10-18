@@ -3,18 +3,18 @@ SHELL = /bin/sh
 baseDir = /opt
 
 
-# SolvisSmartHomeServer settings
+# solvis2mqtt settings
 
 accountSolvis = solvis
 solvisDir = $(baseDir)/$(accountSolvis)
-serverDir = $(solvisDir)/SolvisSmartHomeServer
-solvisJar = SolvisSmartHomeServer.jar
+serverDir = $(solvisDir)/solvis2mqtt
+solvisJar = solvis2mqtt.jar
 baseXml = base
 writablePath = `sed -n 's/.*\?writablePathLinux="\([^"]*\)".*/\1/gp' base.xml`
 
 systemD = /etc/systemd/system
-service = SolvisSmartHomeServer
-serviceDebug = DebugSolvisSmartHomeServer
+service = solvis2mqtt
+serviceDebug = solvis2mqtt-debug
 serviceSources = $(service).service $(serviceDebug).service
 serviceFiles = $(systemD)/$(service).service $(systemD)/$(serviceDebug).service
 

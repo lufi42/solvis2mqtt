@@ -1,6 +1,6 @@
-var solvisPath = 'mqtt-client.0.SolvisSmartHomeServer.mySolvis.';
+var solvisPath = 'mqtt-client.0.solvis2mqtt.mySolvis.';
 var solvis = 'mySolvis';
-var online = 'mqtt-client.0.SolvisSmartHomeServer.IoBroker.online';
+var online = 'mqtt-client.0.solvis2mqtt.IoBroker.online';
 
 var channels = [
 	'C04:WarmwasserPumpe',
@@ -52,7 +52,7 @@ function init() {
         return;
     }
 
-    // Beim Starten dem SolvisSmartHomeServer mitteilen, dass ioBroker online ist
+    // Beim Starten dem solvis2mqtt mitteilen, dass ioBroker online ist
     setState(online, 'true'); 
 
     channels.forEach(function(channel) {
@@ -103,7 +103,7 @@ function init() {
 
         });
 
-        // Beim Beenden dem SolvisSmartHomeServer mitteilen, dass ioBroker offline ist
+        // Beim Beenden dem solvis2mqtt mitteilen, dass ioBroker offline ist
         onStop (function(){
             setState(online, 'false');
         }, 2000);
@@ -112,7 +112,7 @@ function init() {
     
 
 
-    // Beim Starten dem SolvisSmartHomeServer mitteilen, dass ioBroker online ist
+    // Beim Starten dem solvis2mqtt mitteilen, dass ioBroker online ist
     setState(online, 'true'); 
 
     channels.forEach(function(channel) {
@@ -163,7 +163,7 @@ function init() {
 
         });
 
-        // Beim Beenden dem SolvisSmartHomeServer mitteilen, dass ioBroker offline ist
+        // Beim Beenden dem solvis2mqtt mitteilen, dass ioBroker offline ist
         onStop (function(){
             setState(online, 'false');
         }, 2000);

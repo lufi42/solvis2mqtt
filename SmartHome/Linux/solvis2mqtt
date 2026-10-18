@@ -1,19 +1,19 @@
 #! /bin/sh
-test -f /opt/solvis/SolvisSmartHomeServer/SolvisSmartHomeServer.jar || exit 0
+test -f /opt/solvis/solvis2mqtt/solvis2mqtt.jar || exit 0
 javaPath="/usr/bin/java"
-serverJarPath="/opt/solvis/SolvisSmartHomeServer/SolvisSmartHomeServer.jar"
+serverJarPath="/opt/solvis/solvis2mqtt/solvis2mqtt.jar"
 writeablePath="/media/data/fhem/SolvisXml"
 case "$1" in
     start)
-        echo "Starte SolvisSmartHome-Server"
+        echo "Starte solvis2mqtt"
         $javaPath -jar $serverJarPath
         ;;
     stop)
-        echo "Stoppe SolvisSmartHome-Server"
+        echo "Stoppe solvis2mqtt"
         $javaPath -jar $serverJarPath --server-terminate
         ;;
     restart)
-        echo "Restart SolvisSmartHome-Server"
+        echo "Restart solvis2mqtt"
         $javaPath -jar $serverJarPath --server-terminate
         $javaPath -jar $serverJarPath
         ;;

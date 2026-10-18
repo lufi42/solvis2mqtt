@@ -2,4 +2,4 @@
 set -x
 #sleep 60
 
-java -jar SolvisSmartHomeServer.jar --server-path=/media/data/fhem &> /media/data/fhem/SolvisStdErr.log &
+java -jar solvis2mqtt.jar --server-path=/media/data/fhem &> /media/data/fhem/SolvisStdErr.log &
