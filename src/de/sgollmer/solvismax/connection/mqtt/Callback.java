@@ -57,6 +57,8 @@ final class Callback implements MqttCallbackExtended {
 						this.mqtt.publish(CommandSetScreen.getMqttMeta(solvis));
 						solvis.getAllSolvisData().sendMetaToMqtt(this.mqtt, false);
 					}
+					// delete retained data/meta of channels which don't exist any more
+					this.mqtt.staleCleanup.start(this.mqtt.instances);
 				}
 				// also after a reconnection: the discovery messages may have been deleted meanwhile
 				this.mqtt.haDiscovery.publishDiscovery(this.mqtt.instances);
@@ -86,6 +88,11 @@ final class Callback implements MqttCallbackExtended {
 			}
 			if (this.mqtt.haDiscovery.isBirthTopic(topic)) {
 				this.mqtt.haDiscovery.birthReceived(message.getPayload(), this.mqtt.instances);
+				return;
+			}
+			if (this.mqtt.staleCleanup.isChannelTopic(topic)) {
+				// own data/meta topics, subscribed temporarily by the stale topic cleanup
+				this.mqtt.staleCleanup.received(topic, message.getPayload());
 				return;
 			}
 			SubscribeData subscribeData;

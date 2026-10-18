@@ -230,6 +230,26 @@ public class Mqtt {
 	}
 
 	MqttCallbackExtended callback = new Callback(this);
+	final StaleTopicCleanup staleCleanup = new StaleTopicCleanup(this);
+
+	void subscribe(final String[] topicFilters) throws MqttException {
+		int[] qoSs = new int[topicFilters.length];
+		synchronized (this) {
+			if (this.client == null || !this.client.isConnected()) {
+				throw new MqttException(MqttException.REASON_CODE_CLIENT_NOT_CONNECTED);
+			}
+			this.client.subscribe(topicFilters, qoSs);
+		}
+	}
+
+	void unsubscribe(final String[] topicFilters) throws MqttException {
+		synchronized (this) {
+			if (this.client == null || !this.client.isConnected()) {
+				return;
+			}
+			this.client.unsubscribe(topicFilters);
+		}
+	}
 
 	public void unpublish(final MqttData dataIn) throws MqttException, MqttConnectionLost {
 		if (dataIn != null) {
