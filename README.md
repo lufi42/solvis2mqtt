@@ -57,9 +57,11 @@ docker run -d --name solvis2mqtt --restart unless-stopped --stop-timeout 30 -v .
 
 Alle Argumente hinter dem Image-Namen gehen an den Server. Der Container läuft als Benutzer mit UID 1000, das
 Verzeichnis `data` muss für diesen schreibbar sein (oder `--user` setzen). Die Heap-Größe steht in `JAVA_OPTS`
-(Default `-Xmx384m`, das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM und beendet eine
-laufende GUI-Sequenz, daher `--stop-timeout 30` bzw. `stop_grace_period`. Ein Beispiel für Docker Compose liegt in
-[docker/compose.yaml](docker/compose.yaml).
+(Default `-Xmx384m`, das Learning braucht etwa 300 MB). Beim Stoppen bekommt der Server SIGTERM, meldet sich beim
+Broker ab und bricht eine laufende GUI-Sequenz ab. Vor einem geplanten Stopp daher `GUI_COMMANDS_DISABLE` über
+MQTT absetzen und warten, bis `gui_access` nicht mehr `CONTROL_WRITE_ONGOING` zeigt; sonst kann die Anlage in einem
+Zwischenzustand der Sequenz zurückbleiben. `--stop-timeout 30` bzw. `stop_grace_period` lassen dem Abmelden Zeit.
+Ein Beispiel für Docker Compose liegt in [docker/compose.yaml](docker/compose.yaml).
 
 Ohne Docker: [packaging/linux/INSTALL.md](packaging/linux/INSTALL.md) (Jar, systemd-Unit).
 
