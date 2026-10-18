@@ -1,5 +1,12 @@
 A E N D E R U N G E N
 
+Nach Version 1.0.0 (unveroeffentlicht)
+
+    18.10.2026  Docker-Image ghcr.io/lufi42/solvis2mqtt (amd64, arm64; base.xml und SolvisServerData
+                auf einem Volume unter /data) und GitHub-Actions-Workflow: Jar bei jedem Push, Linux-Zip
+                am Release bei Tags v*, Image-Veroeffentlichung. Build ohne Ant/Maven ueber
+                scripts/build-jar.sh, Release-Paket ueber scripts/make-release-zip.sh.
+
 Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt)
 
     16.10.2026  Home Assistant: Entities einer Unit werden nach dem Solvis-Anlagenschema auf
