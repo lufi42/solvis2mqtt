@@ -73,8 +73,14 @@ public class StaleTopicCleanup {
 				&& (Constants.Mqtt.DATA_SUFFIX.equals(parts[2]) || Constants.Mqtt.META_SUFFIX.equals(parts[2]));
 	}
 
+	private int receivedCount = 0;
+
 	void received(final String topic, final byte[] payload) {
 		synchronized (this) {
+			if (++this.receivedCount <= 3) {
+				logger.debug("Stale topic cleanup: received <" + topic + "> (" + (payload == null ? -1 : payload.length)
+						+ " bytes, collecting=" + this.collecting + ").");
+			}
 			if (!this.collecting || payload == null || payload.length == 0) {
 				return;
 			}
@@ -100,6 +106,7 @@ public class StaleTopicCleanup {
 		String[] filters = this.getSubscribeFilters();
 		try {
 			this.mqtt.subscribe(filters);
+			logger.info("Stale topic cleanup: subscribed to <" + filters[0] + "> and <" + filters[1] + ">.");
 		} catch (MqttException e) {
 			logger.warn("Stale topic cleanup: subscription failed (" + e.getMessage() + "), cleanup skipped.");
 			synchronized (this) {
