@@ -59,6 +59,7 @@ import de.sgollmer.solvismax.model.objects.Observer;
 import de.sgollmer.solvismax.model.objects.Observer.IObserver;
 import de.sgollmer.solvismax.model.objects.Observer.Observable;
 import de.sgollmer.solvismax.model.command.PendingRestore;
+import de.sgollmer.solvismax.model.command.WriteStatus;
 import de.sgollmer.solvismax.model.objects.ScreenRestore;
 import de.sgollmer.solvismax.model.objects.SolvisDescription;
 import de.sgollmer.solvismax.model.objects.Standby;
@@ -96,6 +97,7 @@ public class Solvis {
 
 	private SolvisWorkers worker;
 	private PendingRestore pendingRestore = null;
+	private final WriteStatus writeStatus = new WriteStatus(this);
 
 	private boolean controlEnabled = true;
 
@@ -434,7 +436,11 @@ public class Solvis {
 		}
 		if (currentTimeStamp + this.getEchoInhibitTime_ms() < receiveTimeStamp
 				|| !singleData.equals(current.getSingleData())) {
-			this.execute(new CommandControl(description, singleData, this));
+			CommandControl command = new CommandControl(description, singleData, this);
+			if (this.getFeatures().isInteractiveGUIAccess()) {
+				command.setWriteGeneration(this.writeStatus.requested(description, singleData));
+			}
+			this.execute(command);
 			ignored = false;
 		} else {
 			ignored = true;
@@ -706,6 +712,10 @@ public class Solvis {
 
 	public void registerAbortObserver(final IObserver<Boolean> observer) {
 		this.abortObservable.register(observer);
+	}
+
+	public WriteStatus getWriteStatus() {
+		return this.writeStatus;
 	}
 
 	public PendingRestore getPendingRestore() {

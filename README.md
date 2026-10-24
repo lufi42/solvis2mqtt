@@ -119,6 +119,7 @@ Topic | Richtung | Inhalt
 `<unitId>/<kanal>/meta` | Server → Broker | Beschreibung des Kanals: Typ, Einheit, Wertebereich, schreibbar (retained)
 `<unitId>/<kanal>/cmnd` | Broker → Server | neuen Wert setzen
 `<unitId>/<kanal>/update` | Broker → Server | `true`: Kanal einmalig neu lesen
+`<unitId>/<kanal>/write` | Server → Broker | Schreibstatus eines schreibbaren Kanals als JSON (retained), siehe unten
 `<unitId>/status` | Server → Broker | Verbindung zur Anlage (`SOLVIS_CONNECTED`, `POWER_OFF`, ...)
 `<unitId>/gui_access` | Server → Broker | Zustand der GUI-Steuerung (`CONTROL_WRITE_ONGOING`, `CONTROL_FINISHED`, ...)
 `<unitId>/human_access` | Server → Broker | manueller Eingriff an der Anlage (`USER_ACCESS_DETECTED`, ...)
@@ -132,6 +133,16 @@ Die Kanalliste der eigenen Konfiguration erzeugt `--documentation --csvSemicolon
 (`Appendix/`). `GUI_COMMANDS_DISABLE` vor Wartungsarbeiten an der Anlage absetzen und danach
 `GUI_COMMANDS_ENABLE`, der Server fasst die Oberfläche dann nicht an. `RESTART` beendet den Prozess mit
 Exit-Code 24, `TERMINATE` mit 0; der Dienst-Manager (Docker-Restart-Policy, systemd `Restart=`) startet ihn neu.
+
+**Schreibstatus:** Ein Schreibbefehl wird über die GUI der SolvisRemote ausgeführt und dauert Sekunden bis
+Minuten. Der Server meldet den Fortschritt auf `<unitId>/<kanal>/write`, z. B.
+`{"state":"retrying","target":"50.0","attempts":2,"since":"2026-10-24T10:46:16Z","next_retry":null}`.
+`state` ist `idle` (kein Befehl offen, Wert bestätigt), `pending` (Befehl in der Warteschlange oder in Ausführung)
+oder `retrying` (mindestens ein Versuch fehlgeschlagen). Ein neuer Befehl für denselben Kanal ersetzt den alten.
+Schlagen alle Versuche in der Warteschlange fehl, verwirft der Server den Befehl nicht, sondern stellt ihn nach
+1, 2, 5, 10 und dann alle 15 Minuten erneut ein (`next_retry`), bis er gelingt oder ersetzt wird. Beim
+Verbindungsaufbau meldet der Server für alle schreibbaren Kanäle den aktuellen Stand. Offene Befehle gehen bei
+einem Neustart verloren.
 
 ## Home Assistant
 
@@ -163,6 +174,10 @@ Die Discovery-Nachrichten enthalten:
 * **`suggested_display_precision`** aus der Messgenauigkeit des Kanals.
 * **`value_template`** bei Fühlern: offener oder kurzgeschlossener Fühler (≥ 250 °C, ≤ −35 °C) wird „unbekannt“.
 * **`configuration_url`** auf die SolvisRemote.
+* **Schreibstatus**: zu jedem schreibbaren `C*`-Kanal ein diagnostischer Sensor „… Schreibstatus“
+  (`sensor.solvis_<unitId>_c05_schreibstatus`, Werte `idle`/`pending`/`retrying`, das JSON als Attribute). Damit
+  kann ein Dashboard den Regler sperren, bis die Anlage den neuen Wert bestätigt hat, z. B. mit einer
+  `conditional`-Karte, die den Regler nur bei `idle` zeigt.
 
 **Geräte:** Die Entities einer Unit werden nach dem Anlagenschema auf Geräte verteilt, alle mit dem Hauptgerät
 „Solvis &lt;unitId&gt;“ verknüpft:

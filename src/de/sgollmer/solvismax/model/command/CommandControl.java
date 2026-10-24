@@ -61,6 +61,8 @@ public class CommandControl extends Command {
 	private final Integer monitoringPriority;
 
 	private Map<ChannelDescription, Dependency> toRestore = new HashMap<>(3);
+	// != 0: write command of the smart home system, see WriteStatus
+	private long writeGeneration = 0L;
 	/** original values of the channels in toRestore, captured before they were changed */
 	private Map<ChannelDescription, SingleData<?>> restoreValues = new HashMap<>(3);
 	/** shutdown: skip everything except the restore of already changed dependencies */
@@ -247,8 +249,20 @@ public class CommandControl extends Command {
 		SetResult setResult = description.setValue(solvis, clone);
 		if (setResult == null) {
 			this.writeFailCount.increment();
+			boolean ownChannel = description == this.description && this.writeGeneration != 0L;
 			if (this.writeFailCount.get() < Constants.COMMAND_IGNORED_AFTER_N_FAILURES) {
+				if (ownChannel) {
+					solvis.getWriteStatus().attemptFailed(description, this.writeGeneration);
+				}
 				return ResultStatus.NO_SUCCESS;
+			}
+			if (ownChannel) {
+				// command of the smart home system: not dropped, queued again later by a new
+				// command. This one is removed from the queue and mustn't report success.
+				long generation = this.writeGeneration;
+				this.writeGeneration = 0L;
+				solvis.getWriteStatus().reschedule(description, setValue, generation);
+				return ResultStatus.SUCCESS;
 			}
 			logger.error("Set of channel <" + this.description.getId() + "> not successfull. Aborted.");
 			return ResultStatus.SUCCESS;
@@ -670,6 +684,9 @@ public class CommandControl extends Command {
 			ResultStatus status = command.write(solvis, command.description, command.setValue, command.writeFailCount,
 					true);
 			if (status.isExecuted()) {
+				if (command.setValue != null && command.writeGeneration != 0L) {
+					solvis.getWriteStatus().succeeded(command.description, command.writeGeneration);
+				}
 				command.setValue = null;
 			}
 			return status;
@@ -938,6 +955,14 @@ public class CommandControl extends Command {
 
 	public boolean isInhibitRead() {
 		return this.inhibitRead;
+	}
+
+	/**
+	 * Marks the command as write command of the smart home system, its progress
+	 * is published by WriteStatus.
+	 */
+	public void setWriteGeneration(final long writeGeneration) {
+		this.writeGeneration = writeGeneration;
 	}
 
 }
