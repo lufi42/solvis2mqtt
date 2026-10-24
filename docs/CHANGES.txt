@@ -5,6 +5,13 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
     Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
     Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
+    24.10.2026  Schreibstatus und Wiederholung (Issue #19): Der Fortschritt eines Schreibbefehls aus dem
+                Smart-Home-System wird retained auf <unitId>/<kanal>/write gemeldet (idle, pending, retrying,
+                Zielwert, Versuche, naechster Versuch), in Home Assistant als diagnostischer Sensor
+                "... Schreibstatus". Ein Befehl, dessen Versuche alle fehlschlagen, wird nicht mehr nach 10
+                Versuchen stillschweigend verworfen, sondern nach 1, 2, 5, 10 und dann alle 15 Minuten neu
+                eingestellt, bis er gelingt oder ein neuerer Befehl fuer denselben Kanal ihn ersetzt.
+
     18.10.2026  JUnit-5-Tests (scripts/test.sh, Launcher in lib/test, Quellen in test/), laufen offline
                 gegen die mitgelieferte base.xml und in der CI: Topic-Analyse, Wert-Rundreise der
                 MQTT-Payloads, Aufraeumen veralteter Topics, Rueckstellungsdatei.

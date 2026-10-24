@@ -599,7 +599,43 @@ class HomeAssistantDiscovery {
 		String discoveryTopic = prefix + "/" + domain + "/" + uniqueId + CONFIG_SUFFIX;
 		publishConfig(discoveryTopic, payload.toString());
 
+		if (writeable && isControl) {
+			String writeTopic = this.mqtt.getTopicPrefix() + "/" + unitId + "/" + channelIdTopic + "/"
+					+ Constants.Mqtt.WRITE_SUFFIX;
+			this.publishWriteStatusDiscovery(prefix, uniqueId + "_write", objectId + "_schreibstatus",
+					name + " Schreibstatus", writeTopic, enabledByDefault, availabilityTopic, deviceJson);
+		}
+
 		logger.debug("HA discovery: <" + channelName + "> -> " + domain + " @ <" + discoveryTopic + ">");
+	}
+
+	/**
+	 * Status of the write commands of a writeable channel (idle, pending,
+	 * retrying), the JSON of the write topic as attributes (target, attempts,
+	 * since, next_retry). Allows a dashboard to lock the input until the value
+	 * is confirmed.
+	 */
+	private void publishWriteStatusDiscovery(final String prefix, final String uniqueId, final String objectId,
+			final String name, final String writeTopic, final boolean enabledByDefault,
+			final String availabilityTopic, final String deviceJson) {
+		StringBuilder payload = new StringBuilder();
+		payload.append('{');
+		appendString(payload, "name", name, true);
+		appendString(payload, "unique_id", uniqueId, false);
+		appendString(payload, "default_entity_id", "sensor." + objectId, false);
+		payload.append(",\"has_entity_name\":true");
+		if (!enabledByDefault) {
+			payload.append(",\"enabled_by_default\":false");
+		}
+		appendString(payload, "entity_category", CATEGORY_DIAGNOSTIC, false);
+		appendString(payload, "device_class", "enum", false);
+		payload.append(",\"options\":[\"idle\",\"pending\",\"retrying\"]");
+		appendString(payload, "state_topic", writeTopic, false);
+		appendString(payload, "value_template", "{{ value_json.state }}", false);
+		appendString(payload, "json_attributes_topic", writeTopic, false);
+		appendAvailability(payload, availabilityTopic, deviceJson);
+		payload.append('}');
+		publishConfig(prefix + "/sensor/" + uniqueId + CONFIG_SUFFIX, payload.toString());
 	}
 
 	private String getLabel(final String channelId, final String channelName) {

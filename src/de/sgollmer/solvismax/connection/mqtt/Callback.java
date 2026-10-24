@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import de.sgollmer.solvismax.connection.ISendData;
 import de.sgollmer.solvismax.connection.ServerCommand;
 import de.sgollmer.solvismax.connection.ServerStatus;
 import de.sgollmer.solvismax.connection.mqtt.Mqtt.PublishObserver;
@@ -66,6 +67,10 @@ final class Callback implements MqttCallbackExtended {
 					solvis.getAllSolvisData().getMeasurements().sent(observer);
 					this.mqtt.publish(solvis.getSolvisState().getSolvisStatePackage());
 					this.mqtt.publish(solvis.getHumanAccessPackage());
+					// overwrites retained states of a previous run
+					for (ISendData writeStatus : solvis.getWriteStatus().getAll()) {
+						this.mqtt.publish(writeStatus);
+					}
 				}
 				this.mqtt.publish(ServerStatus.ONLINE.getMqttData());
 				Mqtt.logger.info("New MQTT connection handling successfull.");

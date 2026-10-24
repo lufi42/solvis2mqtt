@@ -171,6 +171,7 @@ public class Constants {
 				// "/#"
 		};
 		public static final String DATA_SUFFIX = "data";
+		public static final String WRITE_SUFFIX = "write";
 		public static final String META_SUFFIX = "meta";
 		public static final String CMND_SUFFIX = "cmnd";
 		public static final String SERVER = "server";

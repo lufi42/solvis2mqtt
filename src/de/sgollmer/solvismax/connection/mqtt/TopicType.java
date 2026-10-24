@@ -66,6 +66,8 @@ public enum TopicType {
 			true, true, true, true, true, Command.SET, Format.FROM_META, "Set value of channel {}"), //
 	UNIT_CHANNEL_UPDATE(null, Constants.Mqtt.UPDATE_SUFFIX, //
 			true, true, true, false, true, Command.GET, Format.NONE, "Update of channel {}"), //
+	UNIT_CHANNEL_WRITE(null, Constants.Mqtt.WRITE_SUFFIX, //
+			false, true, true, null, Format.NONE, "Write status of channel {}"), //
 	UNIT_CHANNEL_DATA(null, Constants.Mqtt.DATA_SUFFIX, //
 			false, true, true, null, Format.NONE, "Current data of channel {}"); //
 
