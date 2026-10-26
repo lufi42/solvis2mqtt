@@ -2029,8 +2029,8 @@
 		</tns:ChannelDescription>
 
 		<tns:ChannelDescription id="S18"
-			buffered="true" unit="l/h">
-			<tns:Measurement type="unsigned" average="true">
+			buffered="true" unit="l/min">
+			<tns:Measurement type="unsigned" average="true" divisor="10">
 				<tns:Field position="78" length="4" />
 			</tns:Measurement>
 		</tns:ChannelDescription>

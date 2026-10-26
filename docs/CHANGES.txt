@@ -10,6 +10,10 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
                 Server in der Konfiguration nicht lesen kann (Installateur-Menue ohne Feature Admin, z. B.
                 C48/C49), werden nicht mehr als Entities angelegt, vorhandene werden beim Start entfernt.
 
+    26.10.2026  S18 (Volumenstrom Warmwasser) richtig skaliert (Issue #22): l/min mit Divisor 10 statt l/h.
+                Beleg: Kopf des Datenloggers der SolvisRemote (S18 l/min#0.1) und Energiebilanz einer Zapfung.
+                Aenderung der control.xml, erfordert ein neues Learning.
+
     24.10.2026  Schreibstatus und Wiederholung (Issue #19): Der Fortschritt eines Schreibbefehls aus dem
                 Smart-Home-System wird retained auf <unitId>/<kanal>/write gemeldet (idle, pending, retrying,
                 Zielwert, Versuche, naechster Versuch), in Home Assistant als diagnostischer Sensor
