@@ -223,9 +223,25 @@ public class AllChannelDescriptions implements IGraficsLearnable {
 		}
 	}
 
+	/**
+	 * The GUI channels the server actually reads in the current configuration
+	 * (configuration mask, features, admin mode): channels on screens which are
+	 * not reachable, e.g. the installer menu without the feature Admin, are not
+	 * part of it.
+	 */
+	public Collection<ChannelDescription> getReadableControlChannels(final Solvis solvis) {
+		return this.getChannels(solvis, Type.ALL_CONTROL, this.updateControlChannelsSequences);
+	}
+
 	private void updateChannels(final Solvis solvis, final Type type,
 			final Map<ChannelConfig, Collection<ChannelDescription>> destin) {
+		for (ChannelDescription description : this.getChannels(solvis, type, destin)) {
+			solvis.execute(new CommandControl(description, solvis));
+		}
+	}
 
+	private synchronized Collection<ChannelDescription> getChannels(final Solvis solvis, final Type type,
+			final Map<ChannelConfig, Collection<ChannelDescription>> destin) {
 		ChannelConfig config = new ChannelConfig(solvis);
 		Collection<ChannelDescription> descriptions = destin.get(config);
 
@@ -258,11 +274,7 @@ public class AllChannelDescriptions implements IGraficsLearnable {
 			descriptions = this.optimize((List<ChannelDescription>) descriptions, solvis);
 			destin.put(config, descriptions);
 		}
-
-		for (ChannelDescription description : descriptions) {
-			solvis.execute(new CommandControl(description, solvis));
-		}
-		return;
+		return descriptions;
 	}
 
 	private Collection<ChannelDescription> optimize(final List<ChannelDescription> descriptions, final Solvis solvis) {

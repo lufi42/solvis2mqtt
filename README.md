@@ -158,8 +158,10 @@ Entity-Typ | Kanäle
 `binary_sensor` | binäre Zustände
 `switch` | schreibbare Binärkanäle
 
-Nicht angelegt werden Kanäle ohne Belegung in der Anlagenkonfiguration (z. B. `I-2`, `O-4`) sowie alle `C*`-Kanäle
-ohne `InteractiveGUIAccess`.
+Nicht angelegt werden Kanäle ohne Belegung in der Anlagenkonfiguration (z. B. `I-2`, `O-4`), alle `C*`-Kanäle
+ohne `InteractiveGUIAccess` sowie `C*`-Kanäle, die der Server in dieser Konfiguration nicht lesen kann, weil sie im
+Installateur-Menü liegen und das Feature `Admin` fehlt (z. B. `C48`, `C49`). Ein Kanal mit festem Wert aus den
+`ChannelOptions` der `base.xml` (`fix="12"`) wird mit diesem Wert veröffentlicht.
 
 Die Discovery-Nachrichten enthalten:
 

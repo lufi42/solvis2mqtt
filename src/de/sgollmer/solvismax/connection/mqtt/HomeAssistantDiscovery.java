@@ -65,6 +65,7 @@ import de.sgollmer.solvismax.log.LogManager;
 import de.sgollmer.solvismax.log.LogManager.ILogger;
 import de.sgollmer.solvismax.model.Instances;
 import de.sgollmer.solvismax.model.Solvis;
+import de.sgollmer.solvismax.model.objects.ChannelDescription;
 import de.sgollmer.solvismax.model.objects.ChannelInstance;
 import de.sgollmer.solvismax.model.objects.IChannelSource;
 import de.sgollmer.solvismax.model.objects.IChannelSource.UpperLowerStep;
@@ -252,10 +253,14 @@ class HomeAssistantDiscovery {
 			String deviceJson = buildDeviceJson(unitId, configurationUrl);
 			Map<String, String> groupDeviceJsons = new HashMap<>();
 			boolean guiAccess = solvis.getFeatures().isInteractiveGUIAccess();
+			Collection<ChannelDescription> readable = guiAccess
+					? solvis.getSolvisDescription().getChannelDescriptions().getReadableControlChannels(solvis)
+					: java.util.Collections.<ChannelDescription>emptyList();
 
 			publishUnitStatusDiscovery(prefix, solvis, unitId, deviceJson, availabilityTopic);
 
 			int skippedControl = 0;
+			int skippedUnreadable = 0;
 			int skippedUnnamed = 0;
 			for (SolvisData solvisData : solvis.getAllSolvisData().getSolvisDatas()) {
 				if (solvisData.isDontSend() || solvisData.getSmartHomeData() == null) {
@@ -276,6 +281,13 @@ class HomeAssistantDiscovery {
 					++skippedControl;
 					continue;
 				}
+				// GUI channels the server never reads in this configuration (e.g. installer menu
+				// without the feature Admin) would stay unknown forever; a fix value is fine
+				if (guiAccess && instance.getDescription().getType() == IChannelSource.Type.CONTROL
+						&& !solvisData.isFix() && !readable.contains(instance.getDescription())) {
+					++skippedUnreadable;
+					continue;
+				}
 				// Channels without assignment (e.g. "I-2") have no meaning in this configuration
 				if (channelName.indexOf('.') < 0) {
 					++skippedUnnamed;
@@ -291,6 +303,10 @@ class HomeAssistantDiscovery {
 			if (skippedControl > 0) {
 				logger.info("HA discovery: " + skippedControl + " GUI channels of unit <" + unitId
 						+ "> not published, feature InteractiveGUIAccess is disabled.");
+			}
+			if (skippedUnreadable > 0) {
+				logger.info("HA discovery: " + skippedUnreadable + " GUI channels of unit <" + unitId
+						+ "> not published, they are not readable in this configuration (installer menu needs the feature Admin).");
 			}
 			if (skippedUnnamed > 0) {
 				logger.info("HA discovery: " + skippedUnnamed + " channels of unit <" + unitId
