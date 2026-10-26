@@ -342,6 +342,8 @@ public class SolvisData extends Observer.Observable<SolvisData> implements IObse
 			this.fix = true;
 			logger.info("The channel <" + this.getId() + "> was set to the fix value \""
 					+ this.getSingleData().toString() + "\".");
+			// the smart home side must see the value as well, otherwise it is never published
+			this.sendProcessing(fixValue, true, false, true, this);
 		}
 	}
 
