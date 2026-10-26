@@ -2,13 +2,13 @@ A E N D E R U N G E N
 
 Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
 
+    Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
+    Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
+
     26.10.2026  Home Assistant (Issue #21): Kanaele mit festem Wert (ChannelOptions fix=...) werden jetzt
                 mit diesem Wert veroeffentlicht; vorher blieben sie in HA "unbekannt". GUI-Kanaele, die der
                 Server in der Konfiguration nicht lesen kann (Installateur-Menue ohne Feature Admin, z. B.
                 C48/C49), werden nicht mehr als Entities angelegt, vorhandene werden beim Start entfernt.
-
-    Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
-    Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
     24.10.2026  Schreibstatus und Wiederholung (Issue #19): Der Fortschritt eines Schreibbefehls aus dem
                 Smart-Home-System wird retained auf <unitId>/<kanal>/write gemeldet (idle, pending, retrying,
