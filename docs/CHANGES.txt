@@ -10,6 +10,11 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
                 Server in der Konfiguration nicht lesen kann (Installateur-Menue ohne Feature Admin, z. B.
                 C48/C49), werden nicht mehr als Entities angelegt, vorhandene werden beim Start entfernt.
 
+    28.10.2026  Neue Kanaele aus dem Datenrahmen (Issue #24): Z01 Anforderung Waermeerzeuger (keine/Warmwasser/
+                Heizung), Z02-Z04 Zustand Heizkreis 1-3 (Timer/Tag/Nacht/Standby/Warmwasser-Vorrang), ohne
+                GUI-Zugriff in jedem Messzyklus. Neue Datei ha-values.properties uebersetzt Rohcodes fuer Home
+                Assistant in Text. Aenderung der control.xml, erfordert ein neues Learning.
+
     28.10.2026  Schreibstatus kehrt nach erfolgreichem Schreiben wieder auf idle zurueck (Issue #23, Fehler
                 aus #19: der Erfolg wurde nie gemeldet, Dashboards blieben gesperrt).
 

@@ -176,6 +176,8 @@ Die Discovery-Nachrichten enthalten:
 * **`suggested_display_precision`** aus der Messgenauigkeit des Kanals.
 * **`value_template`** bei Fühlern: offener oder kurzgeschlossener Fühler (≥ 250 °C, ≤ −35 °C) wird „unbekannt“.
 * **`configuration_url`** auf die SolvisRemote.
+* **Codes als Text**: `ha-values.properties` ordnet Rohcodes Texte zu (z. B. Zustand der Heizkreise `Z02`–`Z04`:
+  Timer/Tag/Nacht/Standby/Warmwasser-Vorrang, Anforderung an den Wärmeerzeuger `Z01`). Überschreibbar wie die Labels.
 * **Schreibstatus**: zu jedem schreibbaren `C*`-Kanal ein diagnostischer Sensor „… Schreibstatus“
   (`sensor.solvis_<unitId>_c05_schreibstatus`, Werte `idle`/`pending`/`retrying`, das JSON als Attribute). Damit
   kann ein Dashboard den Regler sperren, bis die Anlage den neuen Wert bestätigt hat, z. B. mit einer
@@ -195,7 +197,7 @@ Gerät | Inhalt
 
 Die Zuordnung steht in `ha-groups.properties` und berücksichtigt die Belegung des Anlagentyps (`S09.Heissgas` gehört
 zur Wärmepumpe, `S09.Heizungspuffertemperatur_unten` zum Speicher). **Anpassung pro Anlage:** eine Datei
-`ha-groups.properties` oder `ha-labels.properties` im Datenverzeichnis (neben `graficData.xml`) überschreibt die
+`ha-groups.properties`, `ha-labels.properties` oder `ha-values.properties` im Datenverzeichnis (neben `graficData.xml`) überschreibt die
 eingebauten Einträge: Namen ändern, Kanäle anderen Gruppen zuordnen (`S09=waermeerzeuger`), neue Gruppen anlegen
 (`device.keller=Keller`), Kanäle dem Hauptgerät zuweisen (`S14=`). UTF-8, Format wie die eingebauten Dateien unter
 `rsc/de/sgollmer/solvismax/data/`, wirksam nach Neustart.
