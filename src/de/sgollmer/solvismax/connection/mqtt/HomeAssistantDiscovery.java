@@ -79,6 +79,7 @@ class HomeAssistantDiscovery {
 	private static final String RESOURCE_DIR = "/de/sgollmer/solvismax/data/";
 	private static final String LABELS_FILE = "ha-labels.properties";
 	private static final String GROUPS_FILE = "ha-groups.properties";
+	private static final String VALUES_FILE = "ha-values.properties";
 	/** key prefix of the group definitions in ha-groups.properties */
 	private static final String DEVICE_KEY_PREFIX = "device.";
 	private static final String GUI_WRITE_ENABLED_SUFFIX = "gui_write_enabled";
@@ -109,6 +110,7 @@ class HomeAssistantDiscovery {
 	private final Mqtt mqtt;
 	private final Properties labels = new Properties();
 	private final Properties groups = new Properties();
+	private final Properties values = new Properties();
 	private File overrideDir = null;
 	private final Set<String> unknownGroups = new HashSet<>();
 
@@ -124,6 +126,7 @@ class HomeAssistantDiscovery {
 		this.mqtt = mqtt;
 		loadResource(this.labels, LABELS_FILE);
 		loadResource(this.groups, GROUPS_FILE);
+		loadResource(this.values, VALUES_FILE);
 	}
 
 	private static void loadResource(final Properties properties, final String fileName) {
@@ -151,6 +154,7 @@ class HomeAssistantDiscovery {
 		this.overrideDir = dir;
 		loadOverride(this.labels, new File(dir, LABELS_FILE));
 		loadOverride(this.groups, new File(dir, GROUPS_FILE));
+		loadOverride(this.values, new File(dir, VALUES_FILE));
 	}
 
 	private static void loadOverride(final Properties properties, final File file) {
@@ -562,6 +566,12 @@ class HomeAssistantDiscovery {
 			unit = "h";
 		}
 
+		// Codes with a text mapping (ha-values.properties) are published as text without unit and classes
+		String valueMap = "sensor".equals(domain) ? this.getValueMap(channelId, channelName) : null;
+		if (valueMap != null) {
+			unit = null;
+		}
+
 		String deviceClass = deriveDeviceClass(unit, isBoolean, channelId);
 		String stateClass = deriveStateClass(channelId, unit, isBoolean, modes);
 
@@ -595,13 +605,16 @@ class HomeAssistantDiscovery {
 		if (secondsToHours) {
 			payload.append(",\"suggested_display_precision\":1");
 			appendString(payload, "value_template", SECONDS_TO_HOURS_TEMPLATE, false);
-		} else if (accuracy != null && "sensor".equals(domain)) {
+		} else if (accuracy != null && "sensor".equals(domain) && valueMap == null) {
 			int precision = derivePrecision(accuracy);
 			payload.append(",\"suggested_display_precision\":").append(precision);
 		}
 		if ("sensor".equals(domain) && !isControl
 				&& ("temperature".equals(deviceClass) || "pressure".equals(deviceClass))) {
 			appendString(payload, "value_template", OPEN_SENSOR_TEMPLATE, false);
+		}
+		if (valueMap != null) {
+			appendString(payload, "value_template", valueMapTemplate(valueMap), false);
 		}
 		// Numeric channel declared boolean by its assignment (booleanValue = value meaning "false")
 		Integer falseValue = instance.getAssignment().getBooleanValue();
@@ -652,6 +665,40 @@ class HomeAssistantDiscovery {
 		appendAvailability(payload, availabilityTopic, deviceJson);
 		payload.append('}');
 		publishConfig(prefix + "/sensor/" + uniqueId + CONFIG_SUFFIX, payload.toString());
+	}
+
+	/**
+	 * Text for the raw codes of a channel from ha-values.properties ("2=Timer,3=Tag"), looked up like the
+	 * labels by channel name first, then by channel id.
+	 */
+	private String getValueMap(final String channelId, final String channelName) {
+		String map = this.values.getProperty(channelName);
+		if (map == null) {
+			map = this.values.getProperty(channelId);
+		}
+		return map == null || map.trim().isEmpty() ? null : map;
+	}
+
+	/**
+	 * Jinja template that maps the raw code to its text, unknown codes as "Code &lt;n&gt;".
+	 */
+	static String valueMapTemplate(final String map) {
+		StringBuilder dict = new StringBuilder("{");
+		boolean first = true;
+		for (String entry : map.split(",")) {
+			int eq = entry.indexOf('=');
+			if (eq <= 0) {
+				continue;
+			}
+			if (!first) {
+				dict.append(", ");
+			}
+			first = false;
+			dict.append('\'').append(entry.substring(0, eq).trim()).append("': '")
+					.append(entry.substring(eq + 1).trim().replace("'", "")).append('\'');
+		}
+		dict.append('}');
+		return "{{ " + dict + ".get(value | int(-1) | string, 'Code ' ~ value) }}";
 	}
 
 	private String getLabel(final String channelId, final String channelName) {

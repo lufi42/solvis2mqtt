@@ -2201,6 +2201,35 @@
 		<!-- tns:ChannelDescription id=".isSerie7"> <tns:Measurement type="unsigned"> 
 			<tns:Field position="192" length="2" /> </tns:Measurement> </tns:ChannelDescription -->
 
+		<!-- Statusbytes des Datenrahmens (Firmware-Analyse MA150, siehe solvis-stack docs/remote-protokoll.md) -->
+		<!-- Anforderung Waermeerzeuger: 1 keine, 2 Warmwasser, 3 Heizung -->
+		<tns:ChannelDescription id="Z01">
+			<tns:Measurement type="unsigned" fast="true">
+				<tns:Field position="172" length="2" />
+			</tns:Measurement>
+		</tns:ChannelDescription>
+
+		<!-- Zustand HK1: 2 Timer, 3 Tag, 4 Nacht, 5 Standby, 8 Warmwasser-Vorrang -->
+		<tns:ChannelDescription id="Z02">
+			<tns:Measurement type="unsigned" fast="true">
+				<tns:Field position="182" length="2" />
+			</tns:Measurement>
+		</tns:ChannelDescription>
+
+		<!-- Zustand HK2 -->
+		<tns:ChannelDescription id="Z03">
+			<tns:Measurement type="unsigned" fast="true">
+				<tns:Field position="184" length="2" />
+			</tns:Measurement>
+		</tns:ChannelDescription>
+
+		<!-- Zustand HK3 (nach Firmware-Layout, an einer Anlage mit 3 HK nicht geprueft) -->
+		<tns:ChannelDescription id="Z04">
+			<tns:Measurement type="unsigned" fast="true">
+				<tns:Field position="186" length="2" />
+			</tns:Measurement>
+		</tns:ChannelDescription>
+
 		<tns:ChannelDescription id="SL" buffered="true"
 			unit="kW">
 			<tns:Measurement type="unsigned" divisor="10">
@@ -4987,6 +5016,24 @@
 			<tns:Configuration>
 				<tns:ConfigurationMask compareMask="0x08"
 					andMask="0x08" />
+			</tns:Configuration>
+		</tns:Assignment>
+
+		<tns:Assignment id="Z01" name="Z01.Anforderung_Waermeerzeuger" />
+
+		<tns:Assignment id="Z02" name="Z02.Zustand_HK1" />
+
+		<tns:Assignment id="Z03" name="Z03.Zustand_HK2">
+			<tns:Configuration>
+				<tns:ConfigurationMask compareMask="0x02"
+					andMask="0x02" />
+			</tns:Configuration>
+		</tns:Assignment>
+
+		<tns:Assignment id="Z04" name="Z04.Zustand_HK3">
+			<tns:Configuration>
+				<tns:ConfigurationMask compareMask="0x04"
+					andMask="0x04" />
 			</tns:Configuration>
 		</tns:Assignment>
 
