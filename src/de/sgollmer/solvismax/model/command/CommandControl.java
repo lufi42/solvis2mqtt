@@ -684,7 +684,8 @@ public class CommandControl extends Command {
 			ResultStatus status = command.write(solvis, command.description, command.setValue, command.writeFailCount,
 					true);
 			if (status.isExecuted()) {
-				if (command.setValue != null && command.writeGeneration != 0L) {
+				// write() has already cleared setValue on success; a rescheduled write has no generation any more
+				if (command.writeGeneration != 0L) {
 					solvis.getWriteStatus().succeeded(command.description, command.writeGeneration);
 				}
 				command.setValue = null;
