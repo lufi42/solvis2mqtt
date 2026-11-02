@@ -695,7 +695,7 @@ class HomeAssistantDiscovery {
 		}
 		appendString(payload, "entity_category", CATEGORY_DIAGNOSTIC, false);
 		appendString(payload, "device_class", "enum", false);
-		payload.append(",\"options\":[\"idle\",\"pending\",\"retrying\"]");
+		payload.append(",\"options\":[\"idle\",\"pending\",\"retrying\",\"rejected\"]");
 		appendString(payload, "state_topic", writeTopic, false);
 		appendString(payload, "value_template", "{{ value_json.state }}", false);
 		appendString(payload, "json_attributes_topic", writeTopic, false);
