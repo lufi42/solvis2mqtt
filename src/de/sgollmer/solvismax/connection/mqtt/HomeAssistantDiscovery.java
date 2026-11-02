@@ -82,7 +82,9 @@ class HomeAssistantDiscovery {
 	private static final String VALUES_FILE = "ha-values.properties";
 	/** key prefix of the group definitions in ha-groups.properties */
 	private static final String DEVICE_KEY_PREFIX = "device.";
-	private static final String GUI_WRITE_ENABLED_SUFFIX = "gui_write_enabled";
+	private static final String GUI_WRITE_ENABLED_SUFFIX = Constants.Mqtt.GUI_WRITE_ENABLED;
+	private static final String INSTALLER_GROUP_KEY = "installateur";
+	private static final String INSTALLER_GROUP_NAME = "Installateur";
 	private static final String CONFIG_SUFFIX = "/config";
 	/** Home Assistant birth/will topic below the discovery prefix */
 	private static final String STATUS_SUFFIX = "/status";
@@ -277,8 +279,11 @@ class HomeAssistantDiscovery {
 				String channelName = solvisData.getName();
 				String channelId = instance.getDescription().getId();
 				String label = this.getLabel(channelId, channelName);
-				String channelDeviceJson = this.getGroupDeviceJson(unitId, channelId, channelName, deviceJson,
-						groupDeviceJsons);
+				boolean installer = instance.getDescription().getType() == IChannelSource.Type.CONTROL
+						&& solvis.isInstallerChannel(instance.getDescription());
+				String channelDeviceJson = installer
+						? this.getDeviceJsonOfGroup(unitId, INSTALLER_GROUP_KEY, INSTALLER_GROUP_NAME, groupDeviceJsons)
+						: this.getGroupDeviceJson(unitId, channelId, channelName, deviceJson, groupDeviceJsons);
 
 				// Values of the SolvisControl GUI are only read with GUI access
 				if (!guiAccess && instance.getDescription().getType() == IChannelSource.Type.CONTROL) {
@@ -430,8 +435,33 @@ class HomeAssistantDiscovery {
 				payload.toString());
 
 		// Aktuellen Wert als retained Message publishen
-		String guiWriteValue = Boolean.toString(solvis.isControlEnabled());
-		this.mqtt.publish(new MqttData(guiWriteTopic, guiWriteValue, 0, true));
+		this.mqtt.publish(solvis.getGuiWriteEnabledPackage());
+		// Installateur-Modus: Schalter, nur mit Feature Admin (sonst gibt es keine Installateur-Kanaele)
+		if (solvis.isAdmin()) {
+			String installerTopic = topicPrefix + "/" + unitId + "/" + Constants.Mqtt.INSTALLER_MODE;
+			String serverCommandTopic = topicPrefix + "/" + this.mqtt.getSmartHomeId() + "/" + unitId + "/"
+					+ Constants.Mqtt.SERVER + "/" + Constants.Mqtt.CMND_SUFFIX;
+			StringBuilder sw = new StringBuilder();
+			sw.append('{');
+			appendString(sw, "name", "Installateur-Modus", true);
+			appendString(sw, "unique_id", idBase + "_installer_mode", false);
+			appendString(sw, "default_entity_id", "switch." + objectBase + "_installateur_modus", false);
+			sw.append(",\"has_entity_name\":true");
+			appendString(sw, "entity_category", CATEGORY_CONFIG, false);
+			appendString(sw, "icon", "mdi:account-wrench", false);
+			appendString(sw, "state_topic", installerTopic, false);
+			appendString(sw, "value_template", "{{ value_json.state }}", false);
+			appendString(sw, "state_on", "on", false);
+			appendString(sw, "state_off", "off", false);
+			appendString(sw, "json_attributes_topic", installerTopic, false);
+			appendString(sw, "command_topic", serverCommandTopic, false);
+			appendString(sw, "payload_on", "INSTALLER_ENABLE", false);
+			appendString(sw, "payload_off", "INSTALLER_DISABLE", false);
+			appendAvailability(sw, availabilityTopic, deviceJson);
+			sw.append('}');
+			publishConfig(prefix + "/switch/" + idBase + "_installer_mode" + CONFIG_SUFFIX, sw.toString());
+			this.mqtt.publish(solvis.getInstallerMode().getSendData());
+		}
 	}
 
 	private void publishStaticSensor(final String prefix, final String uniqueId, final String objectId,
@@ -506,9 +536,16 @@ class HomeAssistantDiscovery {
 			}
 			return unitDeviceJson;
 		}
+		return this.getDeviceJsonOfGroup(unitId, groupKey, groupName.trim(), cache);
+	}
+
+	private String getDeviceJsonOfGroup(final String unitId, final String groupKey, final String defaultName,
+			final Map<String, String> cache) {
 		String json = cache.get(groupKey);
 		if (json == null) {
-			json = buildGroupDeviceJson(unitId, sanitizeId(groupKey), groupName.trim());
+			String name = this.groups.getProperty(DEVICE_KEY_PREFIX + groupKey);
+			json = buildGroupDeviceJson(unitId, sanitizeId(groupKey),
+					name == null || name.trim().isEmpty() ? defaultName : name.trim());
 			cache.put(groupKey, json);
 		}
 		return json;

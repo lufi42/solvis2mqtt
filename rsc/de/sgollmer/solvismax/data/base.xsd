@@ -348,6 +348,16 @@
 			use="required">
 		</attribute>
 
+		<attribute name="installerModeTime_min" type="int" use="optional">
+			<annotation>
+				<documentation>
+					Installateur-Einstellungen (Kanaele im Installateur-Menue, Feature Admin)
+					werden nur geschrieben, solange der Installateur-Modus aktiv ist
+					(Server-Befehl INSTALLER_ENABLE). Er schaltet sich nach dieser Zeit in
+					Minuten selbst ab. Default: 15
+				</documentation>
+			</annotation>
+		</attribute>
 		<attribute name="csvUnit" type="boolean" use="optional"></attribute>
 	</complexType>
 	<complexType name="ExecutionData">

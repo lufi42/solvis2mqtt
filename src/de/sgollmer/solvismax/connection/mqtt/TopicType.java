@@ -59,6 +59,10 @@ public enum TopicType {
 			false, true, false, null, Format.NONE, "Human access status of the unit (e.g. user, service)"), //
 	UNIT_CONTROL(null, Constants.Mqtt.CONTROL, //
 			false, true, false, null, Format.NONE, "Execution status of the Gui accesses"), //
+	UNIT_INSTALLER_MODE(null, Constants.Mqtt.INSTALLER_MODE, //
+			false, true, false, null, Format.NONE, "Installer mode of the unit (on/off, remaining time)"), //
+	UNIT_GUI_WRITE_ENABLED(null, Constants.Mqtt.GUI_WRITE_ENABLED, //
+			false, true, false, null, Format.NONE, "GUI writes enabled (feature and server command)"), //
 	// Channel must be at the end of the list, because the topics are nou unique
 	UNIT_CHANNEL_META(null, Constants.Mqtt.META_SUFFIX, //
 			false, true, true, null, Format.NONE, "Meta description of channel {}"), //

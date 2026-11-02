@@ -49,7 +49,7 @@ public class WriteStatus {
 	static final long[] RETRY_DELAYS_MS = new long[] { 60000L, 120000L, 300000L, 600000L, 900000L };
 
 	public enum State {
-		IDLE("idle"), PENDING("pending"), RETRYING("retrying");
+		IDLE("idle"), PENDING("pending"), RETRYING("retrying"), REJECTED("rejected");
 
 		private final String name;
 
@@ -111,6 +111,26 @@ public class WriteStatus {
 		}
 		this.publish(data);
 		return generation;
+	}
+
+	/**
+	 * The write was refused without touching the unit (installer setting while
+	 * the installer mode is off).
+	 */
+	public void rejected(final ChannelDescription description, final SingleData<?> value) {
+		ISendData data;
+		synchronized (this) {
+			Entry entry = this.entry(description);
+			entry.generation = ++this.generationCounter;
+			entry.state = State.REJECTED;
+			entry.target = this.format(description, value);
+			entry.attempts = 0;
+			entry.round = 0;
+			entry.since = System.currentTimeMillis();
+			entry.nextRetry = 0L;
+			data = this.createSendData(description, entry);
+		}
+		this.publish(data);
 	}
 
 	/**

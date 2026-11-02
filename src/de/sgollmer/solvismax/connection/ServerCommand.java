@@ -27,6 +27,8 @@ public enum ServerCommand {
 	SERVICE_RESET(false), //
 	SERVICE_TRIGGER(false), //
 	UPDATE_CHANNELS(false), //
+	INSTALLER_ENABLE(false), //
+	INSTALLER_DISABLE(false), //
 	LOG_STANDARD(true, true), //
 	LOG_BUFFERED(true, true);
 

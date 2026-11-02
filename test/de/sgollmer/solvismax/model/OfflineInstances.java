@@ -23,6 +23,14 @@ public final class OfflineInstances {
 	}
 
 	public static Instances create(final File dir) throws Exception {
+		return create(dir, false);
+	}
+
+	/**
+	 * @param admin true: feature Admin on, the installer menu channels are part
+	 *              of the configuration
+	 */
+	public static Instances create(final File dir, final boolean admin) throws Exception {
 		File data = new File(dir, "data");
 		if (!data.isDirectory() && !data.mkdirs()) {
 			throw new IllegalStateException("Can't create " + data);
@@ -40,6 +48,10 @@ public final class OfflineInstances {
 		// the control channels (C*) only exist with GUI access
 		xml = xml.replace("<tns:Feature id=\"InteractiveGUIAccess\" value=\"false\" />",
 				"<tns:Feature id=\"InteractiveGUIAccess\" value=\"true\" />");
+		if (admin) {
+			xml = xml.replace("<tns:Feature id=\"Admin\" value=\"false\" />",
+					"<tns:Feature id=\"Admin\" value=\"true\" />");
+		}
 
 		File baseXml = new File(dir, "base.xml");
 		Files.write(baseXml.toPath(), xml.getBytes(StandardCharsets.UTF_8));

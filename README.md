@@ -108,6 +108,27 @@ Vor dem ersten Start und nach jeder Änderung der `control.xml` ist ein **Learni
 Der Server fährt alle Screens an und merkt sich deren Erkennungsmerkmale im Datenverzeichnis. Während des
 Learnings und bei Schreibzugriffen darf niemand die SolvisRemote-Oberfläche parallel bedienen.
 
+### Installateur-Einstellungen
+
+Die SolvisControl trennt Benutzer-Einstellungen von Installateur-Einstellungen (Installateur-Code). solvis2mqtt bildet
+das nach. Mit dem Feature `Admin` liest der Server auch die Kanäle des Installateur-Menüs (z. B. `C31`–`C45` Vorlauf-
+Parameter, `C47`–`C49` Speicher-Schwellwerte) und legt sie in Home Assistant im eigenen Gerät „Installateur“ an, als
+Kategorie „Konfiguration“. Gelesen werden sie nach den Benutzer-Einstellungen, also am Ende jeder Leserunde (nach
+dem Start und nach einem Eingriff an der Anlage). Ohne `Admin` werden sie weder gelesen noch angelegt.
+
+**Geschrieben** werden Installateur-Einstellungen nur, solange der **Installateur-Modus** aktiv ist:
+
+* Einschalten mit dem Server-Befehl `INSTALLER_ENABLE` auf `<unitId>/server/cmnd`, ausschalten mit `INSTALLER_DISABLE`;
+  in Home Assistant ist das der Schalter „Installateur-Modus“ am Hauptgerät.
+* Der Modus schaltet sich nach `installerModeTime_min` (Attribut der Unit, Default 15 Minuten) und beim Stopp des
+  Servers von selbst ab. Zustand und Restzeit stehen retained auf `<unitId>/installer_mode`.
+* Ein Schreibbefehl bei ausgeschaltetem Modus wird abgewiesen: Schreibstatus `rejected` auf `<kanal>/write`,
+  Meldung auf dem `error`-Topic, Eintrag im Log. Die Anlage wird dabei nicht angefasst.
+* Jede Änderung einer Installateur-Einstellung wird mit altem und neuem Wert als Warnung protokolliert.
+
+Welche Kanäle Installateur-Einstellungen sind, ergibt sich aus der `control.xml`: Bildschirme unterhalb des
+Installateur-Menüs und Kanäle mit `admin`-Konfiguration. Den Installateur-Code gibt der Server selbst ein.
+
 ### MQTT-Topics
 
 Alle Topics beginnen mit `<topicPrefix>/<smartHomeId>/`, Kanalnamen sind `<id>:<name>`, z. B.
@@ -123,7 +144,9 @@ Topic | Richtung | Inhalt
 `<unitId>/status` | Server → Broker | Verbindung zur Anlage (`SOLVIS_CONNECTED`, `POWER_OFF`, ...)
 `<unitId>/gui_access` | Server → Broker | Zustand der GUI-Steuerung (`CONTROL_WRITE_ONGOING`, `CONTROL_FINISHED`, ...)
 `<unitId>/human_access` | Server → Broker | manueller Eingriff an der Anlage (`USER_ACCESS_DETECTED`, ...)
-`<unitId>/server/cmnd` | Broker → Server | Befehle für die Unit: `GUI_COMMANDS_DISABLE`, `GUI_COMMANDS_ENABLE`, `UPDATE_CHANNELS`, `SERVICE_RESET`, `SERVICE_TRIGGER`, `SCREEN_RESTORE_INHIBIT/ENABLE`, `COMMAND_OPTIMIZATION_INHIBIT/ENABLE`
+`<unitId>/gui_write_enabled` | Server → Broker | `true`/`false`: GUI-Schreibzugriff möglich (Feature und `GUI_COMMANDS_*`; retained)
+`<unitId>/installer_mode` | Server → Broker | JSON `{"state":"on","remaining_s":840,"until":"…"}` (retained)
+`<unitId>/server/cmnd` | Broker → Server | Befehle für die Unit: `GUI_COMMANDS_DISABLE`, `GUI_COMMANDS_ENABLE`, `INSTALLER_ENABLE`, `INSTALLER_DISABLE`, `UPDATE_CHANNELS`, `SERVICE_RESET`, `SERVICE_TRIGGER`, `SCREEN_RESTORE_INHIBIT/ENABLE`, `COMMAND_OPTIMIZATION_INHIBIT/ENABLE`
 `server/cmnd` | Broker → Server | Befehle für den Server: `BACKUP`, `RESTART`, `TERMINATE`
 `server/online` | Server → Broker | `true`/`false`, Last Will
 `online` | Broker → Server | `true`/`false`: das Smart-Home-System ist online
@@ -194,6 +217,7 @@ Gerät | Inhalt
 `<unitId> Warmwasser` | Warmwasser- und Zirkulationsfühler, Pumpen, Solltemperatur, Nachheizen
 `<unitId> Heizkreis 1` … `3` | Vorlauf, Raumfühler, Pumpe, Mischer, Betriebsart, Temperaturen, Heizkurve
 `<unitId> Wärmeerzeuger` | Kessel/Brenner, Pelletkessel, Wärmepumpe, Fernwärme: Fühler, Anforderung, Ladepumpe, Störung, Laufzeiten, Starts
+`<unitId> Installateur` | alle Installateur-Einstellungen (nur mit Feature `Admin`, siehe [Installateur-Einstellungen](#installateur-einstellungen))
 
 Die Zuordnung steht in `ha-groups.properties` und berücksichtigt die Belegung des Anlagentyps (`S09.Heissgas` gehört
 zur Wärmepumpe, `S09.Heizungspuffertemperatur_unten` zum Speicher). **Anpassung pro Anlage:** eine Datei

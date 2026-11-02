@@ -272,6 +272,18 @@ public class AllChannelDescriptions implements IGraficsLearnable {
 				}
 			}
 			descriptions = this.optimize((List<ChannelDescription>) descriptions, solvis);
+			// user settings first, installer settings (installer menu) last
+			List<ChannelDescription> ordered = new ArrayList<>(descriptions.size());
+			List<ChannelDescription> installer = new ArrayList<>();
+			for (ChannelDescription description : descriptions) {
+				if (solvis.isInstallerChannel(description)) {
+					installer.add(description);
+				} else {
+					ordered.add(description);
+				}
+			}
+			ordered.addAll(installer);
+			descriptions = ordered;
 			destin.put(config, descriptions);
 		}
 		return descriptions;
