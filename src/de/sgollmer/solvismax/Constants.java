@@ -114,6 +114,8 @@ public class Constants {
 	}
 
 	public static class Defaults {
+		/** installer mode switches itself off after this time (minutes) */
+		public static final int INSTALLER_MODE_TIME_MIN = 15;
 		public static final int REHEATING_NOT_REQUIRED_ACTIVE_TIME = 30000;
 
 	}
@@ -172,6 +174,8 @@ public class Constants {
 		};
 		public static final String DATA_SUFFIX = "data";
 		public static final String WRITE_SUFFIX = "write";
+		public static final String INSTALLER_MODE = "installer_mode";
+		public static final String GUI_WRITE_ENABLED = "gui_write_enabled";
 		public static final String META_SUFFIX = "meta";
 		public static final String CMND_SUFFIX = "cmnd";
 		public static final String SERVER = "server";

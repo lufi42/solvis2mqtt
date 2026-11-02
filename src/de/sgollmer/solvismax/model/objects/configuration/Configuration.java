@@ -46,6 +46,15 @@ public class Configuration {
 		this.feature = feature;
 	}
 
+	public Admin getAdmin() {
+		return this.admin;
+	}
+
+	/** @return true if this element is only available in admin mode (installer menu) */
+	public boolean requiresAdmin() {
+		return this.admin == Admin.ADMIN;
+	}
+
 	public boolean isInConfiguration(final Solvis solvis, boolean init) {
 		if (solvis.isLearning()) {
 			if (this.admin.isAdmin(false)) {

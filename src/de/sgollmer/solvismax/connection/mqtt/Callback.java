@@ -67,6 +67,8 @@ final class Callback implements MqttCallbackExtended {
 					solvis.getAllSolvisData().getMeasurements().sent(observer);
 					this.mqtt.publish(solvis.getSolvisState().getSolvisStatePackage());
 					this.mqtt.publish(solvis.getHumanAccessPackage());
+					this.mqtt.publish(solvis.getInstallerMode().getSendData());
+					this.mqtt.publish(solvis.getGuiWriteEnabledPackage());
 					// overwrites retained states of a previous run
 					for (ISendData writeStatus : solvis.getWriteStatus().getAll()) {
 						this.mqtt.publish(writeStatus);

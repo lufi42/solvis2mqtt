@@ -39,6 +39,7 @@
 			reheatingNotRequiredActiveTime_ms="30000"
 			delayAfterSwitchingOnEnable="true" 
 			resetErrorDelayTime_ms="300000"
+			installerModeTime_min="15"
 			ignoredFrameThicknesScreenSaver="3">
 			<tns:Extensions>
 				<!-- <tns:Extension id="Festbrennstoff" /> -->

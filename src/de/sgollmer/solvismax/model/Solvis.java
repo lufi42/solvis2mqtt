@@ -58,6 +58,11 @@ import de.sgollmer.solvismax.model.objects.ErrorState;
 import de.sgollmer.solvismax.model.objects.Observer;
 import de.sgollmer.solvismax.model.objects.Observer.IObserver;
 import de.sgollmer.solvismax.model.objects.Observer.Observable;
+import de.sgollmer.solvismax.connection.ISendData;
+import de.sgollmer.solvismax.connection.UnitStatePackage;
+import de.sgollmer.solvismax.connection.mqtt.TopicType;
+import de.sgollmer.solvismax.model.objects.configuration.Configuration;
+import de.sgollmer.solvismax.model.objects.IChannelSource;
 import de.sgollmer.solvismax.model.command.PendingRestore;
 import de.sgollmer.solvismax.model.command.WriteStatus;
 import de.sgollmer.solvismax.model.objects.ScreenRestore;
@@ -98,6 +103,8 @@ public class Solvis {
 	private SolvisWorkers worker;
 	private PendingRestore pendingRestore = null;
 	private final WriteStatus writeStatus = new WriteStatus(this);
+	private final InstallerMode installerMode = new InstallerMode(this);
+	private final Map<ChannelDescription, Boolean> installerChannels = new HashMap<>();
 
 	private boolean controlEnabled = true;
 
@@ -437,6 +444,11 @@ public class Solvis {
 		if (currentTimeStamp + this.getEchoInhibitTime_ms() < receiveTimeStamp
 				|| !singleData.equals(current.getSingleData())) {
 			CommandControl command = new CommandControl(description, singleData, this);
+			if (this.isInstallerChannel(description)) {
+				logger.warn("Installer setting <" + current.getName() + "> will be changed from <"
+						+ current.getSingleData() + "> to <" + singleData + "> (installer mode active, "
+						+ this.installerMode.getRemaining_ms() / 1000 + " s left).");
+			}
 			if (this.getFeatures().isInteractiveGUIAccess()) {
 				command.setWriteGeneration(this.writeStatus.requested(description, singleData));
 			}
@@ -714,6 +726,49 @@ public class Solvis {
 		this.abortObservable.register(observer);
 	}
 
+	public InstallerMode getInstallerMode() {
+		return this.installerMode;
+	}
+
+	/**
+	 * @return true if the channel is an installer setting: its own configuration
+	 *         needs admin, or one of the screens on the way from the home screen
+	 *         to the channel's screen does (installer menu).
+	 */
+	public boolean isInstallerChannel(final ChannelDescription description) {
+		synchronized (this.installerChannels) {
+			Boolean cached = this.installerChannels.get(description);
+			if (cached != null) {
+				return cached;
+			}
+		}
+		boolean installer = false;
+		Configuration configuration = description.getConfiguration();
+		if (configuration != null && configuration.getAdmin() != Configuration.Admin.NONE) {
+			installer = true;
+		}
+		if (!installer && description.getType() == IChannelSource.Type.CONTROL) {
+			AbstractScreen screen = description.getScreen(this);
+			for (int guard = 0; screen != null && guard < 100; ++guard) {
+				Configuration screenConfiguration = screen.getConfiguration();
+				if (screenConfiguration != null && screenConfiguration.requiresAdmin()) {
+					installer = true;
+					break;
+				}
+				screen = screen.getPreviousScreen(this);
+			}
+		}
+		synchronized (this.installerChannels) {
+			this.installerChannels.put(description, installer);
+		}
+		return installer;
+	}
+
+	/** installer settings are only written while the installer mode is active */
+	public boolean isInstallerWriteAllowed(final ChannelDescription description) {
+		return !this.isInstallerChannel(description) || this.installerMode.isActive();
+	}
+
 	public WriteStatus getWriteStatus() {
 		return this.writeStatus;
 	}
@@ -730,6 +785,7 @@ public class Solvis {
 	}
 
 	public void abort() {
+		this.installerMode.abort();
 		try {
 			this.closeZip();
 		} catch (IOException e) {
@@ -1017,7 +1073,16 @@ public class Solvis {
 	}
 
 	public void setControlEnabled(boolean controlEnabled) {
+		boolean before = this.isControlEnabled();
 		this.controlEnabled = controlEnabled;
+		if (before != this.isControlEnabled()) {
+			this.distributor.notify(this.getGuiWriteEnabledPackage());
+		}
+	}
+
+	/** retained state for the smart home: GUI writes enabled (feature and server command) */
+	public ISendData getGuiWriteEnabledPackage() {
+		return new UnitStatePackage(TopicType.UNIT_GUI_WRITE_ENABLED, this, Boolean.toString(this.isControlEnabled()));
 	}
 
 }

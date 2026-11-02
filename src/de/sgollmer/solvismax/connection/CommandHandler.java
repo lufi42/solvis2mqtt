@@ -165,6 +165,12 @@ public class CommandHandler {
 			case UPDATE_CHANNELS:
 				assignments.updateControlChannels(solvis);
 				break;
+			case INSTALLER_ENABLE:
+				solvis.getInstallerMode().enable(solvis.getUnit().getInstallerModeTime_ms());
+				break;
+			case INSTALLER_DISABLE:
+				solvis.getInstallerMode().disable();
+				break;
 			case TERMINATE:
 				this.terminate(false);
 				break;
@@ -330,6 +336,12 @@ public class CommandHandler {
 			return;
 		}
 
+		if (!solvis.isInstallerWriteAllowed(description)) {
+			solvis.getWriteStatus().rejected(description, singleData);
+			logger.warn("Channel <" + name + "> is an installer setting, write rejected: installer mode not active.");
+			throw new CommandError("Channel <" + name
+					+ "> is an installer setting. Enable the installer mode first (server command INSTALLER_ENABLE).");
+		}
 		boolean ignored;
 		try {
 			ignored = solvis.setFromExternal(description, singleData);

@@ -58,6 +58,7 @@ public class Unit implements IAccountInfo {
 	private final int watchDogTime_ms;
 	private final int releaseBlockingAfterUserAccess_ms;
 	private final int releaseBlockingAfterServiceAccess_ms;
+	private final int installerModeTime_min;
 	private final int reheatingNotRequiredActiveTime_ms;
 	private final int resetErrorDelayTime_ms;
 	private final boolean delayAfterSwitchingOnEnable;
@@ -81,7 +82,8 @@ public class Unit implements IAccountInfo {
 			final int resetErrorDelayTime_ms, final boolean delayAfterSwitchingOn, final boolean fwLth2_21_02A,
 			final Features features, final int ignoredFrameThicknesScreenSaver,
 			final Collection<Pattern> ignoredChannels, final Map<String, ChannelAssignment> assignments,
-			final boolean csvUnit, final AllDurations durations, final AllChannelOptions channelOptions) {
+			final boolean csvUnit, final AllDurations durations, final AllChannelOptions channelOptions,
+			final int installerModeTime_min) {
 		this.id = id;
 		this.configuration = configuration;
 		this.url = url;
@@ -99,6 +101,7 @@ public class Unit implements IAccountInfo {
 		this.watchDogTime_ms = watchDogTime_ms;
 		this.releaseBlockingAfterUserAccess_ms = releaseBlockingAfterUserAccess_ms;
 		this.releaseBlockingAfterServiceAccess_ms = releaseBlockingAfterServiceAccess_ms;
+		this.installerModeTime_min = installerModeTime_min;
 		this.resetErrorDelayTime_ms = resetErrorDelayTime_ms;
 		this.reheatingNotRequiredActiveTime_ms = clearNotRequiredTime_ms;
 		this.delayAfterSwitchingOnEnable = delayAfterSwitchingOn;
@@ -163,6 +166,7 @@ public class Unit implements IAccountInfo {
 		private int watchDogTime_ms;
 		private int releaseBlockingAfterUserAccess_ms;
 		private int releaseBlockingAfterServiceAccess_ms;
+		private int installerModeTime_min = Constants.Defaults.INSTALLER_MODE_TIME_MIN;
 		private int resetErrorDelayTime_ms = 0;
 		private int reheatingNotRequiredActiveTime_ms = Constants.Defaults.REHEATING_NOT_REQUIRED_ACTIVE_TIME;
 		private boolean delayAfterSwitchingOnEnable = false;
@@ -235,6 +239,9 @@ public class Unit implements IAccountInfo {
 					case "releaseBlockingAfterServiceAccess_ms":
 						this.releaseBlockingAfterServiceAccess_ms = Integer.parseInt(value);
 						break;
+					case "installerModeTime_min":
+						this.installerModeTime_min = Integer.parseInt(value);
+						break;
 					case "resetErrorDelayTime_ms":
 						this.resetErrorDelayTime_ms = Integer.parseInt(value);
 						break;
@@ -283,7 +290,7 @@ public class Unit implements IAccountInfo {
 					this.releaseBlockingAfterServiceAccess_ms, this.reheatingNotRequiredActiveTime_ms,
 					this.resetErrorDelayTime_ms, this.delayAfterSwitchingOnEnable, this.fwLth2_21_02A, this.features,
 					this.ignoredFrameThicknesScreenSaver, this.ignoredChannels, this.assignments, this.csvUnit,
-					this.durations, this.channelOptions);
+					this.durations, this.channelOptions, this.installerModeTime_min);
 
 		}
 
@@ -401,6 +408,11 @@ public class Unit implements IAccountInfo {
 
 	public int getReleaseBlockingAfterUserAccess_ms() {
 		return this.releaseBlockingAfterUserAccess_ms;
+	}
+
+	/** installer mode switches itself off after this time */
+	public long getInstallerModeTime_ms() {
+		return this.installerModeTime_min * 60000L;
 	}
 
 	public int getReleaseBlockingAfterServiceAccess_ms() {
