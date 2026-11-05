@@ -436,6 +436,36 @@ class HomeAssistantDiscovery {
 
 		// Aktuellen Wert als retained Message publishen
 		this.mqtt.publish(solvis.getGuiWriteEnabledPackage());
+		// Stoerung der Anlage mit Details (JSON) und Bildschirmfoto des Fehlerscreens
+		String faultTopic = topicPrefix + "/" + unitId + "/" + Constants.Mqtt.FAULT;
+		StringBuilder fault = new StringBuilder();
+		fault.append('{');
+		appendString(fault, "name", "St\u00f6rung", true);
+		appendString(fault, "unique_id", idBase + "_fault", false);
+		appendString(fault, "default_entity_id", "binary_sensor." + objectBase + "_stoerung", false);
+		fault.append(",\"has_entity_name\":true");
+		appendString(fault, "device_class", "problem", false);
+		appendString(fault, "state_topic", faultTopic, false);
+		appendString(fault, "value_template", "{{ value_json.state }}", false);
+		appendString(fault, "payload_on", "on", false);
+		appendString(fault, "payload_off", "off", false);
+		appendString(fault, "json_attributes_topic", faultTopic, false);
+		appendAvailability(fault, availabilityTopic, deviceJson);
+		fault.append('}');
+		publishConfig(prefix + "/binary_sensor/" + idBase + "_fault" + CONFIG_SUFFIX, fault.toString());
+		StringBuilder image = new StringBuilder();
+		image.append('{');
+		appendString(image, "name", "St\u00f6rungsbild", true);
+		appendString(image, "unique_id", idBase + "_fault_image", false);
+		appendString(image, "default_entity_id", "image." + objectBase + "_stoerungsbild", false);
+		image.append(",\"has_entity_name\":true");
+		appendString(image, "entity_category", CATEGORY_DIAGNOSTIC, false);
+		appendString(image, "image_topic", faultTopic + "/" + Constants.Mqtt.FAULT_IMAGE, false);
+		appendString(image, "content_type", "image/png", false);
+		appendAvailability(image, availabilityTopic, deviceJson);
+		image.append('}');
+		publishConfig(prefix + "/image/" + idBase + "_fault_image" + CONFIG_SUFFIX, image.toString());
+		this.mqtt.publish(solvis.getFaultPublisher().getSendData());
 		// Installateur-Modus: Schalter, nur mit Feature Admin (sonst gibt es keine Installateur-Kanaele)
 		if (solvis.isAdmin()) {
 			String installerTopic = topicPrefix + "/" + unitId + "/" + Constants.Mqtt.INSTALLER_MODE;

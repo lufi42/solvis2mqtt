@@ -20,7 +20,7 @@ public class MqttData implements Cloneable {
 	private final String rawTopic;
 	final MqttMessage message;
 
-	private MqttData(final TopicType topicType, final Solvis solvis, final String channelId, final byte[] payload,
+	public MqttData(final TopicType topicType, final Solvis solvis, final String channelId, final byte[] payload,
 			final int qoS, final boolean retained) {
 		this.topicType = topicType;
 		this.solvis = solvis;

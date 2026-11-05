@@ -5,6 +5,12 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
     Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
     Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
+    05.11.2026  Stoerungsdetails per MQTT (Issue #15), Ersatz fuer die entfallene Mail: retained JSON auf
+                <unitId>/fault (state, since, message, channels, message_screen, image) und das
+                Bildschirmfoto des Fehlerscreens als PNG auf <unitId>/fault/image. In Home Assistant als
+                binary_sensor "Stoerung" (device_class problem, Details als Attribute) und image
+                "Stoerungsbild".
+
     02.11.2026  Installateur-Modus (Issue #25): Mit Feature Admin werden die Kanaele des Installateur-Menues
                 gelesen (nach den Benutzer-Einstellungen) und in HA im Geraet "Installateur" angelegt.
                 Geschrieben werden sie nur im Installateur-Modus (Server-Befehle INSTALLER_ENABLE/

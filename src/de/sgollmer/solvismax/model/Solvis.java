@@ -58,6 +58,7 @@ import de.sgollmer.solvismax.model.objects.ErrorState;
 import de.sgollmer.solvismax.model.objects.Observer;
 import de.sgollmer.solvismax.model.objects.Observer.IObserver;
 import de.sgollmer.solvismax.model.objects.Observer.Observable;
+import de.sgollmer.solvismax.connection.FaultPublisher;
 import de.sgollmer.solvismax.connection.ISendData;
 import de.sgollmer.solvismax.connection.UnitStatePackage;
 import de.sgollmer.solvismax.connection.mqtt.TopicType;
@@ -104,6 +105,7 @@ public class Solvis {
 	private PendingRestore pendingRestore = null;
 	private final WriteStatus writeStatus = new WriteStatus(this);
 	private final InstallerMode installerMode = new InstallerMode(this);
+	private final FaultPublisher faultPublisher = new FaultPublisher(this);
 	private final Map<ChannelDescription, Boolean> installerChannels = new HashMap<>();
 
 	private boolean controlEnabled = true;
@@ -159,6 +161,7 @@ public class Solvis {
 		this.backupHandler = measurementsBackupHandler;
 		this.backupHandler.register(this, unit.getId());
 		this.distributor = new Distributor(this);
+		this.solvisErrorObservable.register(this.faultPublisher);
 		this.measurementUpdateThread = new MeasurementUpdateThread(unit);
 		this.timeZone = timeZone;
 		this.writePath = writePath;
@@ -724,6 +727,10 @@ public class Solvis {
 
 	public void registerAbortObserver(final IObserver<Boolean> observer) {
 		this.abortObservable.register(observer);
+	}
+
+	public FaultPublisher getFaultPublisher() {
+		return this.faultPublisher;
 	}
 
 	public InstallerMode getInstallerMode() {
