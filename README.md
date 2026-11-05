@@ -146,6 +146,8 @@ Topic | Richtung | Inhalt
 `<unitId>/human_access` | Server → Broker | manueller Eingriff an der Anlage (`USER_ACCESS_DETECTED`, ...)
 `<unitId>/gui_write_enabled` | Server → Broker | `true`/`false`: GUI-Schreibzugriff möglich (Feature und `GUI_COMMANDS_*`; retained)
 `<unitId>/installer_mode` | Server → Broker | JSON `{"state":"on","remaining_s":840,"until":"…"}` (retained)
+`<unitId>/fault` | Server → Broker | Störung der Anlage als JSON: `state` on/off, `since`, `message`, `channels`, `message_screen`, `image` (retained)
+`<unitId>/fault/image` | Server → Broker | Bildschirmfoto des Fehlerscreens als PNG, solange die Störung als Meldung angezeigt wird (retained)
 `<unitId>/server/cmnd` | Broker → Server | Befehle für die Unit: `GUI_COMMANDS_DISABLE`, `GUI_COMMANDS_ENABLE`, `INSTALLER_ENABLE`, `INSTALLER_DISABLE`, `UPDATE_CHANNELS`, `SERVICE_RESET`, `SERVICE_TRIGGER`, `SCREEN_RESTORE_INHIBIT/ENABLE`, `COMMAND_OPTIMIZATION_INHIBIT/ENABLE`
 `server/cmnd` | Broker → Server | Befehle für den Server: `BACKUP`, `RESTART`, `TERMINATE`
 `server/online` | Server → Broker | `true`/`false`, Last Will
@@ -233,7 +235,8 @@ legt sie neu an, weil Home Assistant sie sonst nicht umzieht; Entity-Id und Hist
 oder Namen gehen dabei verloren.
 
 Zusätzliche Status-Entities: Verbindungsstatus, GUI-Status, Anlagenzugriff (je `sensor`) und „Schreibzugriff
-aktiviert“ (`binary_sensor`).
+aktiviert“ (`binary_sensor`), außerdem „Störung“ (`binary_sensor`, Klasse `problem`, mit Zeitpunkt, Meldung und
+betroffenen Kanälen als Attribute) und „Störungsbild“ (`image`, das Bildschirmfoto des Fehlerscreens).
 
 ## Betrieb
 
@@ -373,7 +376,8 @@ Es darf immer nur ein Server die SolvisRemote steuern, und ein laufender GUI-Zug
 Entfallen sind der TCP-Port, `--server-terminate` und `--server-restart` (Stoppen über SIGTERM bzw. den
 Dienst-Manager), FHEM-Modul, Mail-Versand, Windows-Task und der ioBroker-Generator. ioBroker und andere Systeme
 nutzen die MQTT-Topics direkt. Als Ersatz für die Störungs-Mail stehen `<unitId>/status` = `ERROR` und die
-Störungskanäle zur Verfügung, die Benachrichtigung übernimmt das Smart-Home-System.
+Störungskanäle zur Verfügung, dazu das Topic `<unitId>/fault` mit Fehlertext und Bildschirmfoto; die Benachrichtigung
+übernimmt das Smart-Home-System (HA-Automation auf `binary_sensor` „Störung“ oder Prometheus-Alarm).
 
 ## Entwicklung
 
