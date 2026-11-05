@@ -169,6 +169,10 @@ public class SolvisState extends Observable<SolvisStatePackage> {
 		return this.errorState.isMessageError();
 	}
 
+	public java.util.Collection<String> getErrorChannelIds() {
+		return this.errorState.getErrorChannelIds();
+	}
+
 	public boolean isMessageErrorVisible() {
 		return this.errorState.isMessageErrorVisible();
 	}

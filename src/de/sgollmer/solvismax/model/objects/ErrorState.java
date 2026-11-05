@@ -329,6 +329,15 @@ public class ErrorState extends Observable<ErrorState.Info> {
 		}
 	}
 
+	/** ids of the channels currently reporting an error */
+	public synchronized java.util.Collection<String> getErrorChannelIds() {
+		java.util.Collection<String> ids = new java.util.ArrayList<>(this.errorChannels.size());
+		for (ChannelDescription description : this.errorChannels) {
+			ids.add(description.getId());
+		}
+		return ids;
+	}
+
 	public boolean isMessageError() {
 		return ErrorType.MESSAGE.isError(this.errorState);
 	}

@@ -61,6 +61,10 @@ public enum TopicType {
 			false, true, false, null, Format.NONE, "Execution status of the Gui accesses"), //
 	UNIT_INSTALLER_MODE(null, Constants.Mqtt.INSTALLER_MODE, //
 			false, true, false, null, Format.NONE, "Installer mode of the unit (on/off, remaining time)"), //
+	UNIT_FAULT(null, Constants.Mqtt.FAULT, //
+			false, true, false, null, Format.NONE, "Plant fault of the unit (JSON: state, message, channels)"), //
+	UNIT_FAULT_IMAGE(new String[] { Constants.Mqtt.FAULT }, Constants.Mqtt.FAULT_IMAGE, //
+			false, true, false, null, Format.NONE, "Hardcopy of the error screen (PNG)"), //
 	UNIT_GUI_WRITE_ENABLED(null, Constants.Mqtt.GUI_WRITE_ENABLED, //
 			false, true, false, null, Format.NONE, "GUI writes enabled (feature and server command)"), //
 	// Channel must be at the end of the list, because the topics are nou unique

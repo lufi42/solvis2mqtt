@@ -175,6 +175,8 @@ public class Constants {
 		public static final String DATA_SUFFIX = "data";
 		public static final String WRITE_SUFFIX = "write";
 		public static final String INSTALLER_MODE = "installer_mode";
+		public static final String FAULT = "fault";
+		public static final String FAULT_IMAGE = "image";
 		public static final String GUI_WRITE_ENABLED = "gui_write_enabled";
 		public static final String META_SUFFIX = "meta";
 		public static final String CMND_SUFFIX = "cmnd";
