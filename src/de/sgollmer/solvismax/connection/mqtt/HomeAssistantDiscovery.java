@@ -491,6 +491,41 @@ class HomeAssistantDiscovery {
 			sw.append('}');
 			publishConfig(prefix + "/switch/" + idBase + "_installer_mode" + CONFIG_SUFFIX, sw.toString());
 			this.mqtt.publish(solvis.getInstallerMode().getSendData());
+			// Brennersperre ueber O-1 (Issue #18): Schalter und Ablaufzeit, nur mit Kanal C50
+			if (solvis.getBurnerLock().isAvailable()) {
+				String lockTopic = topicPrefix + "/" + unitId + "/" + Constants.Mqtt.BURNER_LOCK;
+				StringBuilder lock = new StringBuilder();
+				lock.append('{');
+				appendString(lock, "name", "Brennersperre", true);
+				appendString(lock, "unique_id", idBase + "_burner_lock", false);
+				appendString(lock, "default_entity_id", "switch." + objectBase + "_brennersperre", false);
+				lock.append(",\"has_entity_name\":true");
+				appendString(lock, "icon", "mdi:fire-off", false);
+				appendString(lock, "state_topic", lockTopic, false);
+				appendString(lock, "value_template", "{{ value_json.state }}", false);
+				appendString(lock, "state_on", "on", false);
+				appendString(lock, "state_off", "off", false);
+				appendString(lock, "json_attributes_topic", lockTopic, false);
+				appendString(lock, "command_topic", serverCommandTopic, false);
+				appendString(lock, "payload_on", "BURNER_LOCK_ENABLE", false);
+				appendString(lock, "payload_off", "BURNER_LOCK_DISABLE", false);
+				appendAvailability(lock, availabilityTopic, deviceJson);
+				lock.append('}');
+				publishConfig(prefix + "/switch/" + idBase + "_burner_lock" + CONFIG_SUFFIX, lock.toString());
+				StringBuilder until = new StringBuilder();
+				until.append('{');
+				appendString(until, "name", "Brennersperre bis", true);
+				appendString(until, "unique_id", idBase + "_burner_lock_until", false);
+				appendString(until, "default_entity_id", "sensor." + objectBase + "_brennersperre_bis", false);
+				until.append(",\"has_entity_name\":true");
+				appendString(until, "device_class", "timestamp", false);
+				appendString(until, "state_topic", lockTopic, false);
+				appendString(until, "value_template", "{{ value_json.until if value_json.until else None }}", false);
+				appendAvailability(until, availabilityTopic, deviceJson);
+				until.append('}');
+				publishConfig(prefix + "/sensor/" + idBase + "_burner_lock_until" + CONFIG_SUFFIX, until.toString());
+				this.mqtt.publish(solvis.getBurnerLock().getSendData());
+			}
 		}
 	}
 

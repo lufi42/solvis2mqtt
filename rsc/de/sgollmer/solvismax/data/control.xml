@@ -1693,6 +1693,79 @@
 			</tns:Identification>
 		</tns:Screen>
 
+		<!-- Ausgaenge des Installateur-Menues, Weg zum Analogausgang O-1 (Brennersperre, Issue #18).
+			Screens aufgenommen an einer SolvisMax 6 mit SolvisControl 2 (MA150), siehe solvis-stack
+			docs/sc2-screens. Beide AUSGAENGE-Seiten tragen denselben Titel, erkannt werden sie am
+			ersten Menuepunkt (Handbetrieb bzw. zurueck). -->
+		<tns:Screen id="Ausgaenge-1" backId="Installateur-Menue"
+			previousId="Installateur-Menue" service="true">
+			<tns:Configuration admin="ADMIN" />
+			<tns:TouchPoint pushTimeRefId="Standard"
+				releaseTimeRefId="WindowChange">
+				<tns:Coordinate X="213" Y="40" />
+			</tns:TouchPoint>
+			<tns:Identification>
+				<tns:Grafic id="Ausgaenge-1">
+					<tns:Rectangle>
+						<tns:TopLeft X="45" Y="2" />
+						<tns:BottomRight X="138" Y="26" />
+					</tns:Rectangle>
+				</tns:Grafic>
+			</tns:Identification>
+		</tns:Screen>
+
+		<tns:Screen id="Ausgaenge-2" backId="Installateur-Menue"
+			previousId="Ausgaenge-1" service="true">
+			<tns:Configuration admin="ADMIN" />
+			<tns:TouchPoint pushTimeRefId="Standard"
+				releaseTimeRefId="WindowChange">
+				<tns:Coordinate X="220" Y="108" />
+			</tns:TouchPoint>
+			<tns:Identification>
+				<tns:Grafic id="Ausgaenge-2">
+					<tns:Rectangle>
+						<tns:TopLeft X="38" Y="2" />
+						<tns:BottomRight X="138" Y="26" />
+					</tns:Rectangle>
+				</tns:Grafic>
+			</tns:Identification>
+		</tns:Screen>
+
+		<tns:Screen id="Analoge-Ausgaenge" backId="Ausgaenge-2"
+			previousId="Ausgaenge-2" service="true">
+			<tns:Configuration admin="ADMIN" />
+			<tns:TouchPoint pushTimeRefId="Standard"
+				releaseTimeRefId="WindowChange">
+				<tns:Coordinate X="220" Y="63" />
+			</tns:TouchPoint>
+			<tns:Identification>
+				<tns:Grafic id="Analoge-Ausgaenge">
+					<tns:Rectangle>
+						<tns:TopLeft X="26" Y="2" />
+						<tns:BottomRight X="215" Y="14" />
+					</tns:Rectangle>
+				</tns:Grafic>
+			</tns:Identification>
+		</tns:Screen>
+
+		<!-- AUSGAENGE>MODULATION 1/2: Typ (Auto/Hand) des Analogausgangs O-1 -->
+		<tns:Screen id="O1-Modulation" backId="Analoge-Ausgaenge"
+			previousId="Analoge-Ausgaenge" service="true">
+			<tns:Configuration admin="ADMIN" />
+			<tns:TouchPoint pushTimeRefId="Standard"
+				releaseTimeRefId="WindowChange">
+				<tns:Coordinate X="20" Y="40" />
+			</tns:TouchPoint>
+			<tns:Identification>
+				<tns:Grafic id="O1-Modulation">
+					<tns:Rectangle>
+						<tns:TopLeft X="34" Y="2" />
+						<tns:BottomRight X="185" Y="14" />
+					</tns:Rectangle>
+				</tns:Grafic>
+			</tns:Identification>
+		</tns:Screen>
+
 		<tns:Screen id="Zaehlfunktion" backId="Sonstiges-2"
 			previousId="Sonstiges-2">
 			<tns:Configuration>
@@ -4166,6 +4239,62 @@
 			</tns:Control>
 		</tns:ChannelDescription>
 
+
+		<!-- C50.Ausgang_O1_Typ: Typ des Analogausgangs O-1 (Auto/Hand), Brennersperre (Issue #18).
+			Die Pfeile links/rechts schalten den Typ weiter: links fuehrt zu Auto, rechts zu Hand.
+			Erkannt wird der Typ an weissen Stellen der Beschriftung (A/o bei Auto, H/d bei Hand),
+			das Learning druckt daher nur einmal rechts (Hand) und einmal links (Auto) und
+			hinterlaesst Auto. Vorgabe Hand muss 0,0 V sein (Anforderung aus), sie wird nicht veraendert. -->
+		<tns:ChannelDescription id="C50">
+			<tns:Control>
+				<tns:GuiAccess screenId="O1-Modulation">
+					<tns:CurrentValue>
+						<tns:TopLeft X="155" Y="19" />
+						<tns:BottomRight X="190" Y="31" />
+					</tns:CurrentValue>
+				</tns:GuiAccess>
+				<tns:TypeMode>
+					<tns:ModeEntry id="Hand">
+						<tns:GuiSet>
+							<tns:Touch pushTimeRefId="Standard"
+								releaseTimeRefId="ModeChange">
+								<tns:Coordinate X="205" Y="25" />
+							</tns:Touch>
+							<tns:ScreenGrafic id="O1TypHand" exact="true" />
+						</tns:GuiSet>
+						<tns:MustBeWhite>
+							<tns:TopLeft X="164" Y="21" />
+							<tns:BottomRight X="165" Y="21" />
+						</tns:MustBeWhite>
+						<tns:MustBeWhite>
+							<tns:TopLeft X="175" Y="21" />
+							<tns:BottomRight X="175" Y="22" />
+						</tns:MustBeWhite>
+					</tns:ModeEntry>
+					<tns:ModeEntry id="Auto">
+						<tns:GuiSet>
+							<tns:Touch pushTimeRefId="Standard"
+								releaseTimeRefId="ModeChange">
+								<tns:Coordinate X="143" Y="25" />
+							</tns:Touch>
+							<tns:ScreenGrafic id="O1TypAuto" exact="true" />
+						</tns:GuiSet>
+						<tns:MustBeWhite>
+							<tns:TopLeft X="162" Y="21" />
+							<tns:BottomRight X="162" Y="27" />
+						</tns:MustBeWhite>
+						<tns:MustBeWhite>
+							<tns:TopLeft X="183" Y="21" />
+							<tns:BottomRight X="183" Y="27" />
+						</tns:MustBeWhite>
+					</tns:ModeEntry>
+				</tns:TypeMode>
+				<tns:UpdateBy>
+					<tns:HumanAccess />
+				</tns:UpdateBy>
+			</tns:Control>
+		</tns:ChannelDescription>
+
 	</tns:ChannelDescriptions>
 
 
@@ -5190,6 +5319,8 @@
 		<tns:Assignment id="C48" name="C48.Puffer_dT_Stopp" />
 
 		<tns:Assignment id="C49" name="C49.Puffer_Tmin" />
+
+		<tns:Assignment id="C50" name="C50.Ausgang_O1_Typ" />
 
 
 	</tns:ChannelAssignments>

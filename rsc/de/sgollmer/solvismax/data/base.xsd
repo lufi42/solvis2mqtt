@@ -358,6 +358,15 @@
 				</documentation>
 			</annotation>
 		</attribute>
+		<attribute name="burnerLockTime_min" type="int" use="optional">
+			<annotation>
+				<documentation>
+					Dauer der Brennersperre (Analogausgang O-1 auf Hand, Server-Befehl
+					BURNER_LOCK_ENABLE ohne Minutenangabe) in Minuten. Nach Ablauf stellt der
+					Server O-1 wieder auf Auto. Default: 120
+				</documentation>
+			</annotation>
+		</attribute>
 		<attribute name="csvUnit" type="boolean" use="optional"></attribute>
 	</complexType>
 	<complexType name="ExecutionData">
