@@ -152,8 +152,11 @@ als zeitlich begrenzte **Brennersperre** ab:
   Anlage 0,0 V sein, der Server ändert sie nicht.
 * Voraussetzung ist ein Learning der Screens `Ausgaenge-1`, `Ausgaenge-2`, `Analoge-Ausgaenge` und `O1-Modulation`
   (beim ersten Start nach dem Update; dabei stellt der Server O-1 einmal kurz auf `Hand` und zurück auf `Auto`).
-  Die Screens sind an einer SolvisMax 6 mit SolvisControl 2 (Firmware MA150) aufgenommen; angenommen wird, dass der
-  linke Pfeil des Typ-Felds zu `Auto` und der rechte zu `Hand` führt. Wie ein solcher Kanal entsteht, beschreibt
+  Die Screens sind an einer SolvisMax 6 mit SolvisControl 2 (Firmware MA150) aufgenommen; dort kennt das Typ-Feld
+  nur `Auto` und `Hand`, beide Pfeile wechseln zwischen den beiden Werten (geprüft am 07.11.2026). Einzelne
+  Berührungen gehen an der SolvisControl gelegentlich verloren, der Server wiederholt sie dann (bis zu drei Versuche
+  mit je zwei Berührungen; schlägt auch das fehl, meldet der Schreibstatus `rejected`). Wie ein solcher Kanal
+  entsteht, beschreibt
   [docs/neuer-kanal.md](docs/neuer-kanal.md).
 
 ### MQTT-Topics

@@ -12,7 +12,8 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
                 persistiert in burner-lock-<unitId>.properties, nach einem Neustart fortgesetzt oder aufgehoben.
                 Zustand auf <unitId>/burner_lock, HA-Schalter "Brennersperre" und Sensor "Brennersperre bis".
                 Server-Befehle koennen jetzt ein Argument tragen (BEFEHL:wert). Anleitung docs/neuer-kanal.md.
-                Aenderung der control.xml, erfordert ein neues Learning (nur mit Feature Admin).
+                Aenderung der control.xml, erfordert ein neues Learning (nur mit Feature Admin). Typ-Feld an der
+                Anlage geprueft: nur Auto und Hand, beide Pfeile wechseln zwischen den Werten.
 
     05.11.2026  Stoerungsdetails per MQTT (Issue #15), Ersatz fuer die entfallene Mail: retained JSON auf
                 <unitId>/fault (state, since, message, channels, message_screen, image) und das

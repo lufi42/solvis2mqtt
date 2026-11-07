@@ -4257,7 +4257,7 @@
 					<tns:ModeEntry id="Hand">
 						<tns:GuiSet>
 							<tns:Touch pushTimeRefId="Standard"
-								releaseTimeRefId="ModeChange">
+								releaseTimeRefId="WindowChange">
 								<tns:Coordinate X="205" Y="25" />
 							</tns:Touch>
 							<tns:ScreenGrafic id="O1TypHand" exact="true" />
@@ -4274,7 +4274,7 @@
 					<tns:ModeEntry id="Auto">
 						<tns:GuiSet>
 							<tns:Touch pushTimeRefId="Standard"
-								releaseTimeRefId="ModeChange">
+								releaseTimeRefId="WindowChange">
 								<tns:Coordinate X="143" Y="25" />
 							</tns:Touch>
 							<tns:ScreenGrafic id="O1TypAuto" exact="true" />
