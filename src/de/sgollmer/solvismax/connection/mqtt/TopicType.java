@@ -61,6 +61,8 @@ public enum TopicType {
 			false, true, false, null, Format.NONE, "Execution status of the Gui accesses"), //
 	UNIT_INSTALLER_MODE(null, Constants.Mqtt.INSTALLER_MODE, //
 			false, true, false, null, Format.NONE, "Installer mode of the unit (on/off, remaining time)"), //
+	UNIT_BURNER_LOCK(null, Constants.Mqtt.BURNER_LOCK, //
+			false, true, false, null, Format.NONE, "Burner lock via output O-1 (JSON: state, remaining time, type of O-1)"), //
 	UNIT_FAULT(null, Constants.Mqtt.FAULT, //
 			false, true, false, null, Format.NONE, "Plant fault of the unit (JSON: state, message, channels)"), //
 	UNIT_FAULT_IMAGE(new String[] { Constants.Mqtt.FAULT }, Constants.Mqtt.FAULT_IMAGE, //

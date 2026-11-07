@@ -40,6 +40,7 @@
 			delayAfterSwitchingOnEnable="true" 
 			resetErrorDelayTime_ms="300000"
 			installerModeTime_min="15"
+			burnerLockTime_min="120"
 			ignoredFrameThicknesScreenSaver="3">
 			<tns:Extensions>
 				<!-- <tns:Extension id="Festbrennstoff" /> -->

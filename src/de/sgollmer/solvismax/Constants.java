@@ -116,6 +116,8 @@ public class Constants {
 	public static class Defaults {
 		/** installer mode switches itself off after this time (minutes) */
 		public static final int INSTALLER_MODE_TIME_MIN = 15;
+		/** burner lock (O-1 manual mode) releases itself after this time (minutes) */
+		public static final int BURNER_LOCK_TIME_MIN = 120;
 		public static final int REHEATING_NOT_REQUIRED_ACTIVE_TIME = 30000;
 
 	}
@@ -125,6 +127,7 @@ public class Constants {
 		public static final String RESOURCE_DESTINATION = "SolvisServerData";
 		public static final String PENDING_RESTORE_PREFIX = "pending-restore-";
 		public static final String PENDING_RESTORE_SUFFIX = ".properties";
+		public static final String BURNER_LOCK_PREFIX = "burner-lock-";
 		public static final String LEARN_DESTINATION = "LearnedImages";
 		public static final String APPENDIX_DESTINATION = "Appendix";
 		public static final String SOLVIS_ERROR_DESTINATION = "SolvisErrorImages";
@@ -175,6 +178,7 @@ public class Constants {
 		public static final String DATA_SUFFIX = "data";
 		public static final String WRITE_SUFFIX = "write";
 		public static final String INSTALLER_MODE = "installer_mode";
+		public static final String BURNER_LOCK = "burner_lock";
 		public static final String FAULT = "fault";
 		public static final String FAULT_IMAGE = "image";
 		public static final String GUI_WRITE_ENABLED = "gui_write_enabled";

@@ -29,6 +29,7 @@ import de.sgollmer.solvismax.helper.Helper;
 import de.sgollmer.solvismax.log.LogManager;
 import de.sgollmer.solvismax.log.LogManager.ILogger;
 import de.sgollmer.solvismax.model.Instances;
+import de.sgollmer.solvismax.model.BurnerLock;
 import de.sgollmer.solvismax.model.Solvis;
 import de.sgollmer.solvismax.model.WatchDog.Event;
 import de.sgollmer.solvismax.model.command.CommandSetScreen;
@@ -99,6 +100,15 @@ public class CommandHandler {
 			throws IOException, ClientAssignmentException, TerminationException, TypeException {
 		ServerCommand command;
 		String commandString = (String) receivedData.getSingleData().get();
+		// optional argument, e.g. BURNER_LOCK_ENABLE:240 (minutes)
+		String argument = null;
+		if (commandString != null) {
+			String[] parts = commandString.trim().split("[\\s:=]+", 2);
+			commandString = parts[0];
+			if (parts.length == 2) {
+				argument = parts[1].trim();
+			}
+		}
 		try {
 			command = ServerCommand.valueOf(commandString);
 		} catch (Exception e) {
@@ -170,6 +180,31 @@ public class CommandHandler {
 				break;
 			case INSTALLER_DISABLE:
 				solvis.getInstallerMode().disable();
+				break;
+			case BURNER_LOCK_ENABLE:
+				if (!solvis.getBurnerLock().isAvailable()) {
+					client.sendCommandError("Burner lock not available: feature Admin and the channel <"
+							+ BurnerLock.CHANNEL_ID + "> (type of output O-1) are required.");
+					break;
+				}
+				long duration_ms = solvis.getUnit().getBurnerLockTime_ms();
+				if (argument != null && !argument.isEmpty()) {
+					try {
+						duration_ms = Long.parseLong(argument) * 60000L;
+					} catch (NumberFormatException e) {
+						client.sendCommandError("BURNER_LOCK_ENABLE: duration <" + argument
+								+ "> isn't a number of minutes.");
+						break;
+					}
+				}
+				if (duration_ms <= 0L) {
+					client.sendCommandError("BURNER_LOCK_ENABLE: duration must be at least 1 minute.");
+					break;
+				}
+				solvis.getBurnerLock().enable(duration_ms);
+				break;
+			case BURNER_LOCK_DISABLE:
+				solvis.getBurnerLock().disable();
 				break;
 			case TERMINATE:
 				this.terminate(false);

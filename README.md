@@ -22,6 +22,7 @@ die nur die Web-Oberfläche haben.
 * Auslesen aller Messwerte und Zustände (Fühler, Pumpen, Ventile, Laufzeiten, Zähler, Betriebsarten).
 * Setzen der Anlagenparameter: Solltemperaturen, Betriebsarten der Heizkreise, Warmwasser, Zirkulation,
   Heizkurven, optional auch Installateur-Parameter (Feature `Admin`).
+* Zeitlich begrenzte Brennersperre über den Analogausgang O-1 bei externem Kessel (Feature `Admin`).
 * Home Assistant MQTT Auto-Discovery mit Geräten nach dem Solvis-Anlagenschema (siehe unten).
 * Erkennen von Anlagenfehlern (Fehlerscreen) sowie von Nutzer- und Service-Eingriffen am Touchscreen mit
   anschließendem Neulesen der Parameter.
@@ -129,6 +130,35 @@ dem Start und nach einem Eingriff an der Anlage). Ohne `Admin` werden sie weder 
 Welche Kanäle Installateur-Einstellungen sind, ergibt sich aus der `control.xml`: Bildschirme unterhalb des
 Installateur-Menüs und Kanäle mit `admin`-Konfiguration. Den Installateur-Code gibt der Server selbst ein.
 
+### Brennersperre (Analogausgang O-1)
+
+Bei Anlagen mit externem Kessel (SolvisLino, `mainHeating="Pellet"` oder `Extern`) fordert die SolvisControl den
+Brenner über den Analogausgang O-1 (0–10 V) an. Steht O-1 im Installateur-Menü auf `Hand` mit Vorgabe 0,0 V, bleibt
+der Brenner aus, etwa um den Solarertrag zu bevorzugen oder bei Wartung. Mit Feature `Admin` bildet der Server das
+als zeitlich begrenzte **Brennersperre** ab:
+
+* `BURNER_LOCK_ENABLE` auf `<unitId>/server/cmnd` stellt den Kanal `C50` (Typ von O-1) auf `Hand`, optional mit
+  Dauer in Minuten (`BURNER_LOCK_ENABLE:240`), sonst gilt `burnerLockTime_min` (Attribut der Unit, Default 120).
+  `BURNER_LOCK_DISABLE` und der Ablauf der Zeit stellen `Auto` wieder her.
+* Die Ablaufzeit liegt in `SolvisServerData/burner-lock-<unitId>.properties`. Nach einem Neustart wird die Sperre
+  fortgesetzt oder aufgehoben, wenn sie zwischenzeitlich abgelaufen ist; beim Stopp des Servers bleibt sie in der
+  Anlage bestehen.
+* Zustand retained auf `<unitId>/burner_lock`: `{"state":"on","remaining_s":5400,"until":"…","typ":"Hand","locked":true}`;
+  `typ` ist der zuletzt an der Anlage gelesene Typ von O-1. In Home Assistant: Schalter „Brennersperre“ und Sensor
+  „Brennersperre bis“ am Hauptgerät, der Kanal `C50` selbst als Select „Analogausgang O-1 Typ“ im Gerät
+  „Installateur“.
+* Die Sperre schreibt `C50` ohne Installateur-Modus, weil das ihr einziger Zweck ist; jede Änderung wird als Warnung
+  protokolliert. Für direkte Schreibzugriffe auf `C50` gilt der Installateur-Modus. „Vorgabe Hand“ muss an der
+  Anlage 0,0 V sein, der Server ändert sie nicht.
+* Voraussetzung ist ein Learning der Screens `Ausgaenge-1`, `Ausgaenge-2`, `Analoge-Ausgaenge` und `O1-Modulation`
+  (beim ersten Start nach dem Update; dabei stellt der Server O-1 einmal kurz auf `Hand` und zurück auf `Auto`).
+  Die Screens sind an einer SolvisMax 6 mit SolvisControl 2 (Firmware MA150) aufgenommen; dort kennt das Typ-Feld
+  nur `Auto` und `Hand`, beide Pfeile wechseln zwischen den beiden Werten (geprüft am 07.11.2026). Einzelne
+  Berührungen gehen an der SolvisControl gelegentlich verloren, der Server wiederholt sie dann (bis zu drei Versuche
+  mit je zwei Berührungen; schlägt auch das fehl, meldet der Schreibstatus `rejected`). Wie ein solcher Kanal
+  entsteht, beschreibt
+  [docs/neuer-kanal.md](docs/neuer-kanal.md).
+
 ### MQTT-Topics
 
 Alle Topics beginnen mit `<topicPrefix>/<smartHomeId>/`, Kanalnamen sind `<id>:<name>`, z. B.
@@ -146,9 +176,10 @@ Topic | Richtung | Inhalt
 `<unitId>/human_access` | Server → Broker | manueller Eingriff an der Anlage (`USER_ACCESS_DETECTED`, ...)
 `<unitId>/gui_write_enabled` | Server → Broker | `true`/`false`: GUI-Schreibzugriff möglich (Feature und `GUI_COMMANDS_*`; retained)
 `<unitId>/installer_mode` | Server → Broker | JSON `{"state":"on","remaining_s":840,"until":"…"}` (retained)
+`<unitId>/burner_lock` | Server → Broker | Brennersperre als JSON: `state` on/off, `remaining_s`, `until`, `typ` (Typ von O-1), `locked` (retained, nur mit Kanal `C50`)
 `<unitId>/fault` | Server → Broker | Störung der Anlage als JSON: `state` on/off, `since`, `message`, `channels`, `message_screen`, `image` (retained)
 `<unitId>/fault/image` | Server → Broker | Bildschirmfoto des Fehlerscreens als PNG, solange die Störung als Meldung angezeigt wird (retained)
-`<unitId>/server/cmnd` | Broker → Server | Befehle für die Unit: `GUI_COMMANDS_DISABLE`, `GUI_COMMANDS_ENABLE`, `INSTALLER_ENABLE`, `INSTALLER_DISABLE`, `UPDATE_CHANNELS`, `SERVICE_RESET`, `SERVICE_TRIGGER`, `SCREEN_RESTORE_INHIBIT/ENABLE`, `COMMAND_OPTIMIZATION_INHIBIT/ENABLE`
+`<unitId>/server/cmnd` | Broker → Server | Befehle für die Unit: `GUI_COMMANDS_DISABLE`, `GUI_COMMANDS_ENABLE`, `INSTALLER_ENABLE`, `INSTALLER_DISABLE`, `BURNER_LOCK_ENABLE[:Minuten]`, `BURNER_LOCK_DISABLE`, `UPDATE_CHANNELS`, `SERVICE_RESET`, `SERVICE_TRIGGER`, `SCREEN_RESTORE_INHIBIT/ENABLE`, `COMMAND_OPTIMIZATION_INHIBIT/ENABLE`
 `server/cmnd` | Broker → Server | Befehle für den Server: `BACKUP`, `RESTART`, `TERMINATE`
 `server/online` | Server → Broker | `true`/`false`, Last Will
 `online` | Broker → Server | `true`/`false`: das Smart-Home-System ist online
@@ -236,7 +267,9 @@ oder Namen gehen dabei verloren.
 
 Zusätzliche Status-Entities: Verbindungsstatus, GUI-Status, Anlagenzugriff (je `sensor`) und „Schreibzugriff
 aktiviert“ (`binary_sensor`), außerdem „Störung“ (`binary_sensor`, Klasse `problem`, mit Zeitpunkt, Meldung und
-betroffenen Kanälen als Attribute) und „Störungsbild“ (`image`, das Bildschirmfoto des Fehlerscreens).
+betroffenen Kanälen als Attribute) und „Störungsbild“ (`image`, das Bildschirmfoto des Fehlerscreens). Mit Feature
+`Admin` kommen der Schalter „Installateur-Modus“ sowie, bei vorhandenem Kanal `C50`, der Schalter „Brennersperre“
+und der Sensor „Brennersperre bis“ (Zeitstempel) hinzu.
 
 ## Betrieb
 
@@ -269,6 +302,7 @@ Inhalt | Bedeutung | Sichern?
 `graficData.xml`, `LearnedImages/` | Ergebnis des Learnings (Erkennungsmerkmale der Screens) | ja, erspart ein neues Learning
 `measurements.xml` | Sicherung der Zähler und Mittelwerte, wird regelmäßig und beim Beenden geschrieben | ja
 `pending-restore-<unitId>.properties` | nur vorhanden, solange eine GUI-Sequenz Werte verstellt hat, die noch zurückgesetzt werden müssen | nein, nicht löschen
+`burner-lock-<unitId>.properties` | Ablaufzeit einer aktiven Brennersperre | nein, nicht löschen
 `control.xml`, `control.xsd`, `*.xsd` | Kopien der eingebauten Beschreibungen zum Nachlesen | nein, werden neu geschrieben
 `SolvisErrorImages/` | Bildschirmfotos erkannter Fehlerscreens | nach Bedarf
 `solvis-*.log*`, `tinylog.properties` | Logs und deren Konfiguration | nein (Konfiguration ja, falls angepasst)

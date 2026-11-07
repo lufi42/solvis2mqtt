@@ -5,6 +5,16 @@ Version 1.0.0 (solvis2mqtt, https://github.com/lufi42/solvis2mqtt, in Arbeit)
     Erste Version unter dem Namen solvis2mqtt. Reine MQTT-Bridge mit Docker als Standardweg;
     Weiterfuehrung des SolvisSmartHomeServer 01.06.00 von GollmerSt.
 
+    06.11.2026  Brennersperre ueber den Analogausgang O-1 (Issue #18): neuer Kanal C50.Ausgang_O1_Typ (Auto/Hand,
+                Installateur-Menue > Ausgang > weitere > Analogausg. > O-1) mit den Screens Ausgaenge-1/-2,
+                Analoge-Ausgaenge und O1-Modulation. Server-Befehle BURNER_LOCK_ENABLE[:Minuten] und
+                BURNER_LOCK_DISABLE stellen O-1 auf Hand bzw. Auto; Ablauf nach burnerLockTime_min (Default 120),
+                persistiert in burner-lock-<unitId>.properties, nach einem Neustart fortgesetzt oder aufgehoben.
+                Zustand auf <unitId>/burner_lock, HA-Schalter "Brennersperre" und Sensor "Brennersperre bis".
+                Server-Befehle koennen jetzt ein Argument tragen (BEFEHL:wert). Anleitung docs/neuer-kanal.md.
+                Aenderung der control.xml, erfordert ein neues Learning (nur mit Feature Admin). Typ-Feld an der
+                Anlage geprueft: nur Auto und Hand, beide Pfeile wechseln zwischen den Werten.
+
     05.11.2026  Stoerungsdetails per MQTT (Issue #15), Ersatz fuer die entfallene Mail: retained JSON auf
                 <unitId>/fault (state, since, message, channels, message_screen, image) und das
                 Bildschirmfoto des Fehlerscreens als PNG auf <unitId>/fault/image. In Home Assistant als

@@ -105,6 +105,7 @@ public class Solvis {
 	private PendingRestore pendingRestore = null;
 	private final WriteStatus writeStatus = new WriteStatus(this);
 	private final InstallerMode installerMode = new InstallerMode(this);
+	private final BurnerLock burnerLock = new BurnerLock(this);
 	private final FaultPublisher faultPublisher = new FaultPublisher(this);
 	private final Map<ChannelDescription, Boolean> installerChannels = new HashMap<>();
 
@@ -362,6 +363,7 @@ public class Solvis {
 	void start() {
 		this.worker.start();
 		this.pendingRestore.queueRestores();
+		this.burnerLock.start();
 		this.getDistributor().register();
 		UpdateControlAfterPowerOn updateControlAfterPowerOn = new UpdateControlAfterPowerOn();
 		this.solvisState.register(updateControlAfterPowerOn);
@@ -733,6 +735,10 @@ public class Solvis {
 		return this.faultPublisher;
 	}
 
+	public BurnerLock getBurnerLock() {
+		return this.burnerLock;
+	}
+
 	public InstallerMode getInstallerMode() {
 		return this.installerMode;
 	}
@@ -793,6 +799,7 @@ public class Solvis {
 
 	public void abort() {
 		this.installerMode.abort();
+		this.burnerLock.abort();
 		try {
 			this.closeZip();
 		} catch (IOException e) {

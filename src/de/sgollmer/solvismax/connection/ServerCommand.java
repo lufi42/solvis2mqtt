@@ -29,6 +29,8 @@ public enum ServerCommand {
 	UPDATE_CHANNELS(false), //
 	INSTALLER_ENABLE(false), //
 	INSTALLER_DISABLE(false), //
+	BURNER_LOCK_ENABLE(false), //
+	BURNER_LOCK_DISABLE(false), //
 	LOG_STANDARD(true, true), //
 	LOG_BUFFERED(true, true);
 
