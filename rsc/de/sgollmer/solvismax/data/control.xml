@@ -4262,13 +4262,12 @@
 							</tns:Touch>
 							<tns:ScreenGrafic id="O1TypHand" exact="true" />
 						</tns:GuiSet>
+						<!-- Zweite Zeile: bei Hand steht dort "Vorgabe Hand" (ab x=60), bei Auto
+							"Aktuelle Ansteuerung" (ab x=23). Der graue Button-Hintergrund zaehlt
+							nicht als weiss, deshalb kein Bereich im Typ-Feld selbst. -->
 						<tns:MustBeWhite>
-							<tns:TopLeft X="164" Y="21" />
-							<tns:BottomRight X="165" Y="21" />
-						</tns:MustBeWhite>
-						<tns:MustBeWhite>
-							<tns:TopLeft X="175" Y="21" />
-							<tns:BottomRight X="175" Y="22" />
+							<tns:TopLeft X="24" Y="48" />
+							<tns:BottomRight X="56" Y="58" />
 						</tns:MustBeWhite>
 					</tns:ModeEntry>
 					<tns:ModeEntry id="Auto">
@@ -4279,13 +4278,9 @@
 							</tns:Touch>
 							<tns:ScreenGrafic id="O1TypAuto" exact="true" />
 						</tns:GuiSet>
-						<tns:MustBeWhite>
-							<tns:TopLeft X="162" Y="21" />
-							<tns:BottomRight X="162" Y="27" />
-						</tns:MustBeWhite>
-						<tns:MustBeWhite>
-							<tns:TopLeft X="183" Y="21" />
-							<tns:BottomRight X="183" Y="27" />
+						<tns:MustBeWhite invertFunction="true">
+							<tns:TopLeft X="24" Y="48" />
+							<tns:BottomRight X="56" Y="58" />
 						</tns:MustBeWhite>
 					</tns:ModeEntry>
 				</tns:TypeMode>

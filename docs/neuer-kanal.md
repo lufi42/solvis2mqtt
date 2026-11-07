@@ -93,8 +93,14 @@ Beispiel `C50` (gekürzt):
 
 **Learning eines `TypeMode`-Kanals:** Ohne `MustBeWhite` drückt der Server beim Learning nacheinander den
 Berührungspunkt jedes Eintrags und lernt die Grafik, die danach im `CurrentValue`-Rechteck steht; der letzte Eintrag
-bleibt eingestellt. Mit `MustBeWhite`-Rechtecken (pro Eintrag Bereiche, die nur bei diesem Eintrag hell sind)
-erkennt der Server nach jeder Berührung, welcher Eintrag angezeigt wird. Das ist nötig, wenn die Berührungspunkte
+bleibt eingestellt. Mit `MustBeWhite`-Rechtecken (pro Eintrag Bereiche, die nur bei diesem Eintrag weiß sind)
+erkennt der Server nach jeder Berührung, welcher Eintrag angezeigt wird. Weiß heißt dabei wirklich weiß: Die
+Schwelle liegt in der Mitte zwischen dem dunkelsten und dem hellsten Pixel des Screens, der graue Hintergrund der
+Buttons (RGB 119) liegt darunter. Bereiche auf einem Button taugen also nicht; geeignet sind Stellen, an denen bei
+einem Eintrag Text steht und beim anderen nicht (bei `C50` die zweite Zeile, „Aktuelle Ansteuerung“ gegenüber
+„Vorgabe Hand“). Mit `invertFunction="true"` muss der Bereich dunkle Pixel enthalten, so lässt sich derselbe
+Bereich für beide Einträge nutzen. Die Rechtecke lassen sich offline gegen Bildschirmfotos prüfen, siehe
+`O1ModeDetectionTest` mit den Fotos in `test/resources`. Das ist nötig, wenn die Berührungspunkte
 nicht direkt einen Eintrag wählen, sondern weiterschalten (Pfeile ◄ ►) – die Reihenfolge der Einträge bestimmt dann
 die Reihenfolge der Berührungen, der letzte Eintrag ist der Endzustand (`Auto` bei `C50`).
 
